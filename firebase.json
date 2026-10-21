@@ -1,0 +1,22 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "sanad-wearable",
+          "appId": "1:925962384163:android:29f6034e94270cd85e1296",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "sanad-wearable",
+          "configurations": {
+            "android": "1:925962384163:android:29f6034e94270cd85e1296",
+            "ios": "1:925962384163:ios:e186ac4d236a81475e1296"
+          }
+        }
+      }
+    }
+  }
+}

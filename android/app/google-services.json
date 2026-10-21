@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "925962384163",
+    "project_id": "sanad-wearable",
+    "storage_bucket": "sanad-wearable.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925962384163:android:29f6034e94270cd85e1296",
+        "android_client_info": {
+          "package_name": "com.sanad.sanad"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgEcr70ywQhei-6WkUqSAXJpghV-HfCb0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
