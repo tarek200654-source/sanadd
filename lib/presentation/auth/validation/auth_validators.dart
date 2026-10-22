@@ -1,7 +1,11 @@
+import '../../../domain/validation/username_policy.dart';
+
 enum AuthValidationError {
   required,
+  tooShort,
   invalidEmail,
   invalidPhone,
+  invalidUsername,
   tooLong,
   invalidPassword,
   passwordMismatch,
@@ -78,9 +82,24 @@ class PasswordValidation {
 
 abstract final class AuthValidators {
   static const int maxNameLength = 80;
-  static final RegExp _emailPattern = RegExp(
-    r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-  );
+  static final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+  static AuthValidationError? validateUsername(String? value) {
+    final username = value?.trim() ?? '';
+    if (username.isEmpty) return AuthValidationError.required;
+    if (username.length < UsernamePolicy.minLength) {
+      return AuthValidationError.tooShort;
+    }
+    if (username.length > UsernamePolicy.maxLength) {
+      return AuthValidationError.tooLong;
+    }
+    return UsernamePolicy.isValid(username)
+        ? null
+        : AuthValidationError.invalidUsername;
+  }
+
+  static String canonicalUsername(String username) =>
+      UsernamePolicy.canonicalize(username);
 
   static AuthValidationError? validateFullName(String? value) {
     final trimmed = value?.trim() ?? '';
@@ -143,8 +162,8 @@ abstract final class AuthValidators {
     String rawDigits, {
     required bool hasExplicitCountryPrefix,
   }) {
-    var nationalDigits = hasExplicitCountryPrefix &&
-            rawDigits.startsWith(countryDigits)
+    var nationalDigits =
+        hasExplicitCountryPrefix && rawDigits.startsWith(countryDigits)
         ? rawDigits.substring(countryDigits.length)
         : rawDigits;
     if (nationalDigits.startsWith('0')) {
@@ -167,6 +186,8 @@ abstract final class AuthValidators {
     if (confirmation == null || confirmation.isEmpty) {
       return AuthValidationError.required;
     }
-    return password == confirmation ? null : AuthValidationError.passwordMismatch;
+    return password == confirmation
+        ? null
+        : AuthValidationError.passwordMismatch;
   }
 }

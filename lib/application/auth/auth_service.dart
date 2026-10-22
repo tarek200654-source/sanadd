@@ -1,7 +1,7 @@
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../../data/repositories/firestore_user_repository.dart';
 import '../../domain/models/app_user.dart';
-import '../../domain/models/user_role.dart';
+import '../../domain/models/registration_data.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/user_repository.dart';
 import 'auth_service_exception.dart';
@@ -27,23 +27,26 @@ class AuthService {
 
   Stream<String?> authStateChanges() => _authRepository.authStateChanges();
 
-  Future<AppUser> register({
-    required String name,
-    required String email,
-    required String password,
-    required UserRole role,
-    String? phoneNumber,
-  }) async {
+  Future<bool> isUsernameAvailable(String username) =>
+      _userRepository.isUsernameAvailable(username);
+
+  Future<AppUser> register(RegistrationData registration) async {
     final uid = await _authRepository.createAccount(
-      email: email,
-      password: password,
+      email: registration.email.trim(),
+      password: registration.password,
     );
     final user = AppUser(
       uid: uid,
-      name: name,
-      email: email,
-      role: role,
-      phoneNumber: phoneNumber,
+      name: registration.fullName,
+      email: registration.email.trim(),
+      role: registration.role,
+      username: registration.username.trim(),
+      firstName: registration.firstName.trim(),
+      lastName: registration.lastName.trim(),
+      country: registration.country.trim(),
+      region: registration.region.trim(),
+      address: registration.address.trim(),
+      phoneNumber: registration.phoneNumber.trim(),
     );
 
     try {
@@ -60,9 +63,14 @@ class AuthService {
         rollbackStackTrace = stackTrace;
       }
 
+      final failureType =
+          error is UserRepositoryException &&
+              error.type == UserRepositoryFailureType.usernameTaken
+          ? AuthServiceFailureType.usernameTaken
+          : AuthServiceFailureType.profileCreationFailed;
       throw AuthServiceException(
         rollbackError == null
-            ? AuthServiceFailureType.profileCreationFailed
+            ? failureType
             : AuthServiceFailureType.registrationRollbackFailed,
         cause: error,
         causeStackTrace: stackTrace,
@@ -80,7 +88,9 @@ class AuthService {
 
     try {
       final user = await _userRepository.getUser(uid);
-      if (user == null) {
+      if (user == null ||
+          user.uid != uid ||
+          !user.hasCompleteRegistrationProfile) {
         throw const AuthServiceException(
           AuthServiceFailureType.missingUserProfile,
         );
@@ -100,6 +110,29 @@ class AuthService {
         cause: error,
         causeStackTrace: stackTrace,
       );
+    }
+  }
+
+  Future<AppUser?> restoreCurrentUser() async {
+    final uid = _authRepository.currentUserId;
+    if (uid == null || uid.isEmpty) return null;
+
+    try {
+      final user = await _userRepository.getUser(uid);
+      if (user == null ||
+          user.uid != uid ||
+          !user.hasCompleteRegistrationProfile) {
+        await _authRepository.signOut();
+        return null;
+      }
+      return user;
+    } catch (_) {
+      try {
+        await _authRepository.signOut();
+      } catch (_) {
+        // Invalid or unavailable profiles must not keep a partial session.
+      }
+      return null;
     }
   }
 

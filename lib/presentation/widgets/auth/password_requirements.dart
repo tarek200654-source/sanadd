@@ -36,7 +36,7 @@ class PasswordRequirements extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColor.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColor.border.withValues(alpha: 0.8)),
+        border: Border.all(color: AppColor.borderSubtle),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

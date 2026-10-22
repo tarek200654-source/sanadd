@@ -1,6 +1,9 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import '../../core/localization/app_localizations.dart';
+
+import '../../../core/theme/app_color.dart';
+import '../../../core/localization/app_localizations.dart';
 
 enum OnboardingIllustrationKind {
   welcome,
@@ -9,11 +12,6 @@ enum OnboardingIllustrationKind {
   family,
   medicalId,
 }
-
-const _ink = Color(0xFF182C2A);
-const _green = Color(0xFF17836C);
-const _mint = Color(0xFFDDF3E9);
-const _line = Color(0xFFDFE9E4);
 
 // A continuous illustrative rhythm, varying smoothly between 70 and 74 BPM.
 double _demoRate(double seconds) => 72 + 2 * math.sin(seconds * math.pi / 5);
@@ -214,7 +212,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                     tr('HEART RATE', 'نبض القلب'),
                                     maxLines: 1,
                                     style: const TextStyle(
-                                      color: Color(0xFF63756C),
+                                      color: AppColor.onboardingLabel,
                                       fontSize: 9,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: .35,
@@ -226,56 +224,60 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                   scale: 1 + .14 * pulse,
                                   child: const Icon(
                                     Icons.favorite_rounded,
-                                    color: _green,
+                                    color: AppColor.onboardingGreen,
                                     size: 14,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 7),
-                            Row(
-                              textDirection: TextDirection.ltr,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                AnimatedSwitcher(
-                                  key: const ValueKey('watch-bpm'),
-                                  duration: reduced
-                                      ? Duration.zero
-                                      : const Duration(milliseconds: 180),
-                                  child: Text(
-                                    '$bpm',
-                                    key: ValueKey(bpm),
-                                    style: const TextStyle(
-                                      color: _ink,
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.w600,
-                                      height: 1,
-                                      letterSpacing: -1.2,
-                                      fontFeatures: [
-                                        FontFeature.tabularFigures(),
-                                      ],
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Row(
+                                textDirection: TextDirection.ltr,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  AnimatedSwitcher(
+                                    key: const ValueKey('watch-bpm'),
+                                    duration: reduced
+                                        ? Duration.zero
+                                        : const Duration(milliseconds: 180),
+                                    child: Text(
+                                      '$bpm',
+                                      key: ValueKey(bpm),
+                                      style: const TextStyle(
+                                        color: AppColor.onboardingInk,
+                                        fontSize: 36,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1,
+                                        letterSpacing: -1.2,
+                                        fontFeatures: [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 5),
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 4),
-                                  child: Text(
-                                    'BPM',
-                                    style: TextStyle(
-                                      color: Color(0xFF819087),
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w600,
+                                  const SizedBox(width: 5),
+                                  const Padding(
+                                    padding: EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      'BPM',
+                                      style: TextStyle(
+                                        color: AppColor.onboardingSecondary,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 7),
                             Container(
                               height: 1,
                               width: double.infinity,
-                              color: const Color(0xFFE3EBE6),
+                              color: AppColor.onboardingMutedSurface,
                             ),
                             const SizedBox(height: 5),
                             SizedBox(
@@ -310,7 +312,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                               children: [
                                 const Icon(
                                   Icons.favorite_rounded,
-                                  color: Color(0xFFB76B62),
+                                  color: AppColor.onboardingCoralDark,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -323,7 +325,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                   width: 6,
                                   height: 6,
                                   decoration: const BoxDecoration(
-                                    color: _green,
+                                    color: AppColor.onboardingGreen,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -331,7 +333,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                 Text(
                                   tr('LIVE', 'مباشر'),
                                   style: const TextStyle(
-                                    color: Color(0xFF71847B),
+                                    color: AppColor.onboardingMutedGreen,
                                     fontSize: 9,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: .5,
@@ -350,7 +352,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                     height: .95,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: -2,
-                                    color: _ink,
+                                    color: AppColor.onboardingInk,
                                   ),
                                 ),
                                 const Padding(
@@ -358,7 +360,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                   child: Text(
                                     'BPM',
                                     style: TextStyle(
-                                      color: Color(0xFF71847B),
+                                      color: AppColor.onboardingMutedGreen,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: .4,
@@ -428,7 +430,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                           Text(
                             tr('SIGNALS WE READ', 'إشارات بنفهمها'),
                             style: const TextStyle(
-                              color: Color(0xFF89908F),
+                              color: AppColor.onboardingGray,
                               fontSize: 8,
                               fontWeight: FontWeight.w600,
                               letterSpacing: .9,
@@ -440,7 +442,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                         reveal(
                           .31,
                           _DetectionFeature(
-                            color: const Color(0xFF7186A5),
+                            color: AppColor.onboardingBlue,
                             title: tr('Movement', 'الحركة'),
                             detail: tr(
                               'Patterns in motion',
@@ -450,11 +452,14 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                           x: 12,
                         ),
                         const SizedBox(height: 2),
-                        Container(height: 1, color: const Color(0xFFEAE7E3)),
+                        Container(
+                          height: 1,
+                          color: AppColor.onboardingWarmLine,
+                        ),
                         reveal(
                           .42,
                           _DetectionFeature(
-                            color: const Color(0xFFD17B72),
+                            color: AppColor.onboardingCoral,
                             title: tr('Health signals', 'المؤشرات الصحية'),
                             detail: tr(
                               'Heart rate and oxygen',
@@ -464,11 +469,14 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                           x: 12,
                         ),
                         const SizedBox(height: 2),
-                        Container(height: 1, color: const Color(0xFFEAE7E3)),
+                        Container(
+                          height: 1,
+                          color: AppColor.onboardingWarmLine,
+                        ),
                         reveal(
                           .53,
                           _DetectionFeature(
-                            color: const Color(0xFFC3964F),
+                            color: AppColor.onboardingGold,
                             title: tr('Timely alerts', 'التنبيه المناسب'),
                             detail: tr(
                               'Support when it matters',
@@ -487,7 +495,11 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                     top: 80,
                     child: reveal(
                       0,
-                      const _Portrait(size: 94, variant: 0, color: _mint),
+                      const _Portrait(
+                        size: 94,
+                        variant: 0,
+                        color: AppColor.onboardingMint,
+                      ),
                     ),
                   ),
                   Positioned(
@@ -498,7 +510,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                       const _Portrait(
                         size: 66,
                         variant: 1,
-                        color: Color(0xFFF4E8DC),
+                        color: AppColor.onboardingPortraitWarm,
                       ),
                       x: -22,
                     ),
@@ -511,7 +523,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                       const _Portrait(
                         size: 70,
                         variant: 2,
-                        color: Color(0xFFE7E7F7),
+                        color: AppColor.onboardingPortraitLavender,
                       ),
                       x: 22,
                     ),
@@ -524,7 +536,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                       const _Portrait(
                         size: 62,
                         variant: 3,
-                        color: Color(0xFFE2EEF4),
+                        color: AppColor.onboardingPortraitBlue,
                       ),
                       x: -22,
                     ),
@@ -537,7 +549,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                       const _Portrait(
                         size: 64,
                         variant: 1,
-                        color: Color(0xFFF4E8DC),
+                        color: AppColor.onboardingPortraitWarm,
                       ),
                       x: 22,
                     ),
@@ -560,11 +572,11 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                 height: 28,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFFF6E9E5),
+                                  color: AppColor.onboardingPortraitRose,
                                 ),
                                 child: const Icon(
                                   Icons.add_rounded,
-                                  color: Color(0xFFD17B72),
+                                  color: AppColor.onboardingCoral,
                                   size: 20,
                                 ),
                               ),
@@ -572,7 +584,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                               Text(
                                 tr('Medical ID', 'الهوية الطبية'),
                                 style: _label.copyWith(
-                                  color: _ink,
+                                  color: AppColor.onboardingInk,
                                   fontSize: 15,
                                 ),
                               ),
@@ -582,7 +594,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                           Text(
                             tr('Emergency profile', 'ملف الطوارئ'),
                             style: const TextStyle(
-                              color: Color(0xFF87919A),
+                              color: AppColor.onboardingMutedSlate,
                               fontSize: 10,
                             ),
                           ),
@@ -595,7 +607,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                 height: 118,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFFF3F1EC),
+                                  color: AppColor.onboardingPaper,
                                 ),
                               ),
                               Container(
@@ -604,7 +616,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: const Color(0xFFDCD9D1),
+                                    color: AppColor.onboardingPaperLine,
                                     width: 1,
                                   ),
                                 ),
@@ -626,7 +638,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                 ),
                                 width: 1,
                                 height: 32,
-                                color: const Color(0xFFD9D8D2),
+                                color: AppColor.onboardingPaperLineAlt,
                               ),
                               _medicalValue(tr('EMERGENCY', 'الطوارئ'), 'ICE'),
                             ],
@@ -637,7 +649,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                             children: [
                               const Icon(
                                 Icons.contactless_rounded,
-                                color: Color(0xFFD17B72),
+                                color: AppColor.onboardingCoral,
                                 size: 17,
                               ),
                               const SizedBox(width: 6),
@@ -647,7 +659,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
                                   'قرّب الجهاز أو امسح الرمز',
                                 ),
                                 style: const TextStyle(
-                                  color: Color(0xFF596675),
+                                  color: AppColor.onboardingSlate,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -671,7 +683,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
 const _label = TextStyle(
   fontSize: 14,
   fontWeight: FontWeight.w600,
-  color: _ink,
+  color: AppColor.onboardingInk,
 );
 
 Widget _medicalValue(String label, String value) => Column(
@@ -680,7 +692,7 @@ Widget _medicalValue(String label, String value) => Column(
     Text(
       label,
       style: const TextStyle(
-        color: Color(0xFF87919A),
+        color: AppColor.onboardingMutedSlate,
         fontSize: 9,
         fontWeight: FontWeight.w600,
         letterSpacing: .45,
@@ -690,7 +702,7 @@ Widget _medicalValue(String label, String value) => Column(
     Text(
       value,
       style: const TextStyle(
-        color: _ink,
+        color: AppColor.onboardingInk,
         fontSize: 21,
         height: 1,
         fontWeight: FontWeight.w700,
@@ -703,10 +715,8 @@ class _QrMark extends StatelessWidget {
   const _QrMark();
 
   @override
-  Widget build(BuildContext context) => const CustomPaint(
-    size: Size(68, 68),
-    painter: _QrMarkPainter(),
-  );
+  Widget build(BuildContext context) =>
+      const CustomPaint(size: Size(68, 68), painter: _QrMarkPainter());
 }
 
 class _QrMarkPainter extends CustomPainter {
@@ -716,7 +726,7 @@ class _QrMarkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const count = 21;
     final cell = size.width / count;
-    final module = Paint()..color = _ink;
+    final module = Paint()..color = AppColor.onboardingInk;
 
     bool inFinder(int x, int y, int left, int top) =>
         x >= left && x < left + 7 && y >= top && y < top + 7;
@@ -731,7 +741,10 @@ class _QrMarkPainter extends CustomPainter {
             final dx = x - origin.$1;
             final dy = y - origin.$2;
             filled =
-                dx == 0 || dx == 6 || dy == 0 || dy == 6 ||
+                dx == 0 ||
+                dx == 6 ||
+                dy == 0 ||
+                dy == 6 ||
                 (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4);
             break;
           }
@@ -784,7 +797,7 @@ class _DetectionFeature extends StatelessWidget {
                 title,
                 maxLines: 1,
                 style: const TextStyle(
-                  color: _ink,
+                  color: AppColor.onboardingInk,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   height: 1.1,
@@ -795,7 +808,7 @@ class _DetectionFeature extends StatelessWidget {
                 detail,
                 maxLines: 1,
                 style: const TextStyle(
-                  color: Color(0xFF7B8585),
+                  color: AppColor.onboardingGrayGreen,
                   fontSize: 10,
                   height: 1.1,
                 ),
@@ -822,13 +835,13 @@ class _MonitoringMetric extends StatelessWidget {
     children: [
       Row(
         children: [
-          Icon(icon, size: 15, color: _green),
+          Icon(icon, size: 15, color: AppColor.onboardingGreen),
           const SizedBox(width: 6),
           Text(
             value,
             textDirection: TextDirection.ltr,
             style: const TextStyle(
-              color: _ink,
+              color: AppColor.onboardingInk,
               fontSize: 17,
               fontWeight: FontWeight.w600,
               height: 1,
@@ -842,7 +855,7 @@ class _MonitoringMetric extends StatelessWidget {
         label,
         maxLines: 1,
         style: const TextStyle(
-          color: Color(0xFF71847B),
+          color: AppColor.onboardingMutedGreen,
           fontSize: 10,
           fontWeight: FontWeight.w500,
         ),
@@ -868,7 +881,7 @@ class _Portrait extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: color,
-        border: Border.all(color: Colors.white, width: 3),
+        border: Border.all(color: AppColor.surface, width: 3),
       ),
       child: Padding(
         padding: const EdgeInsets.all(4),
@@ -891,16 +904,16 @@ class _PortraitPainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / 100, size.height / 100);
     final skin = [
-      const Color(0xFFDDAF8C),
-      const Color(0xFFECC3A4),
-      const Color(0xFFBC8E71),
-      const Color(0xFFF1CEAF),
+      AppColor.onboardingSkinLight,
+      AppColor.onboardingSkinPeach,
+      AppColor.onboardingSkinMedium,
+      AppColor.onboardingSkinWarm,
     ][variant];
     final clothes = [
-      _green,
-      const Color(0xFFA77F6F),
-      const Color(0xFF787596),
-      const Color(0xFF658898),
+      AppColor.onboardingGreen,
+      AppColor.onboardingClothingWarm,
+      AppColor.onboardingClothingLavender,
+      AppColor.onboardingClothingBlue,
     ][variant];
     final paint = Paint()..color = clothes;
     canvas.drawOval(const Rect.fromLTWH(12, 72, 76, 65), paint);
@@ -913,7 +926,9 @@ class _PortraitPainter extends CustomPainter {
       paint,
     );
     // Hair behind the face gives each caregiver a distinct silhouette.
-    paint.color = variant == 0 ? const Color(0xFFAAB3AE) : _ink;
+    paint.color = variant == 0
+        ? AppColor.onboardingSilhouette
+        : AppColor.onboardingInk;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
@@ -928,7 +943,9 @@ class _PortraitPainter extends CustomPainter {
     );
     paint.color = skin;
     canvas.drawOval(const Rect.fromLTWH(33, 30, 34, 40), paint);
-    paint.color = variant == 0 ? const Color(0xFFAAB3AE) : _ink;
+    paint.color = variant == 0
+        ? AppColor.onboardingSilhouette
+        : AppColor.onboardingInk;
     final hair = Path()
       ..moveTo(31, 42)
       ..quadraticBezierTo(27, 17, 52, 20)
@@ -937,7 +954,7 @@ class _PortraitPainter extends CustomPainter {
       ..quadraticBezierTo(46, 40, 31, 42);
     canvas.drawPath(hair, paint);
     paint
-      ..color = _ink
+      ..color = AppColor.onboardingInk
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
@@ -978,7 +995,7 @@ class _DetectionBackdropPainter extends CustomPainter {
     canvas.drawCircle(
       center,
       72,
-      Paint()..color = const Color(0xFFF6F2EE).withValues(alpha: progress),
+      Paint()..color = AppColor.onboardingBackdrop.withValues(alpha: progress),
     );
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: 91),
@@ -986,24 +1003,24 @@ class _DetectionBackdropPainter extends CustomPainter {
       math.pi * 1.34 * progress,
       false,
       Paint()
-        ..color = const Color(0xFFE7D8CF).withValues(alpha: progress)
+        ..color = AppColor.onboardingBackdropLine.withValues(alpha: progress)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2,
     );
     canvas.drawCircle(
       center + const Offset(66, -37),
       4,
-      Paint()..color = const Color(0xFFD17B72).withValues(alpha: progress),
+      Paint()..color = AppColor.onboardingCoral.withValues(alpha: progress),
     );
     canvas.drawCircle(
       center + const Offset(-68, 32),
       3,
-      Paint()..color = const Color(0xFF7186A5).withValues(alpha: progress),
+      Paint()..color = AppColor.onboardingBlue.withValues(alpha: progress),
     );
     canvas.drawCircle(
       center + const Offset(62, 36),
       3.5,
-      Paint()..color = const Color(0xFFC3964F).withValues(alpha: progress),
+      Paint()..color = AppColor.onboardingGold.withValues(alpha: progress),
     );
   }
 
@@ -1028,7 +1045,7 @@ class _ShieldPainter extends CustomPainter {
       ..lineTo(15, 29)
       ..cubicTo(35, 26, 56, 22, 75, 8)
       ..close();
-    canvas.drawPath(path, Paint()..color = const Color(0xFF344A61));
+    canvas.drawPath(path, Paint()..color = AppColor.onboardingShield);
     final check = Path()
       ..moveTo(59, 79)
       ..lineTo(70, 90)
@@ -1040,7 +1057,7 @@ class _ShieldPainter extends CustomPainter {
         metric.length * ((progress - .15) / .7).clamp(0.0, 1.0),
       ),
       Paint()
-        ..color = Colors.white
+        ..color = AppColor.surface
         ..style = PaintingStyle.stroke
         ..strokeWidth = 5.5
         ..strokeCap = StrokeCap.round
@@ -1057,7 +1074,7 @@ class _ShieldPainter extends CustomPainter {
 class _WavePainter extends CustomPainter {
   const _WavePainter({required this.progress});
   final double progress;
-  final Color color = _green;
+  final Color color = AppColor.onboardingGreen;
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path();
@@ -1128,9 +1145,9 @@ class _OrbitPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    canvas.drawCircle(center, 120, Paint()..color = const Color(0xFFF5F9F6));
+    canvas.drawCircle(center, 120, Paint()..color = AppColor.onboardingOrbit);
     final stroke = Paint()
-      ..color = _line
+      ..color = AppColor.onboardingLine
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     canvas.drawArc(
@@ -1157,7 +1174,7 @@ class _OrbitPainter extends CustomPainter {
         canvas.drawPath(
           path,
           stroke
-            ..color = const Color(0xFFD8E1DC)
+            ..color = AppColor.onboardingOrbitLine
             ..strokeWidth = 1.4,
         );
         if (progress > .95 && phase > 0) {
@@ -1165,7 +1182,7 @@ class _OrbitPainter extends CustomPainter {
           canvas.drawPath(
             pathMetric.extractPath(0, pathMetric.length * fill),
             Paint()
-              ..color = const Color(0xFF89938F)
+              ..color = AppColor.onboardingOrbitAccent
               ..style = PaintingStyle.stroke
               ..strokeWidth = 1.8
               ..strokeCap = StrokeCap.round,
@@ -1181,7 +1198,7 @@ class _OrbitPainter extends CustomPainter {
       canvas.drawCircle(
         p,
         3 * progress,
-        Paint()..color = _green.withValues(alpha: .35),
+        Paint()..color = AppColor.onboardingGreen.withValues(alpha: .35),
       );
     }
   }
@@ -1201,7 +1218,7 @@ class _LiveWavePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.clipRect(Offset.zero & size);
-    const color = _green;
+    const color = AppColor.onboardingGreen;
     const sweepSeconds = 2.5;
     final head = (seconds / sweepSeconds) % 1;
     double y(double time) =>
@@ -1270,7 +1287,7 @@ class _SensorCalloutPainter extends CustomPainter {
       ..lineTo(253, 244);
     final metric = path.computeMetrics().first;
     final stroke = Paint()
-      ..color = const Color(0xFF8BA99A)
+      ..color = AppColor.onboardingCallout
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.3
       ..strokeCap = StrokeCap.round
@@ -1279,12 +1296,12 @@ class _SensorCalloutPainter extends CustomPainter {
     canvas.drawCircle(
       source,
       4,
-      Paint()..color = Colors.white.withValues(alpha: t),
+      Paint()..color = AppColor.surface.withValues(alpha: t),
     );
     canvas.drawCircle(
       source,
       2.3,
-      Paint()..color = _green.withValues(alpha: t),
+      Paint()..color = AppColor.onboardingGreen.withValues(alpha: t),
     );
     if (t > .98) {
       canvas.drawPath(
@@ -1321,7 +1338,7 @@ class _OriginalBandLogo extends StatelessWidget {
             height: 130.5,
             child: ColorFiltered(
               colorFilter: const ColorFilter.mode(
-                Color(0xFFD8DAD7),
+                AppColor.onboardingLogoShadow,
                 BlendMode.srcIn,
               ),
               child: Image.asset(

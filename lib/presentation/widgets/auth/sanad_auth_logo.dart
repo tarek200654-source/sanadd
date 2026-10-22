@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/assets/app_assets.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/theme/app_color.dart';
 
 /// The auth-header version of SANAD's existing mark.
 ///
@@ -10,10 +11,7 @@ import '../../../core/localization/app_localizations.dart';
 /// Sizing the image proportionally to an artwork width of ~92 logical px provides
 /// an elegant, medium-small mark that sits harmoniously in the auth header.
 class SanadAuthLogo extends StatelessWidget {
-  const SanadAuthLogo({
-    super.key,
-    this.artworkWidth = 92,
-  });
+  const SanadAuthLogo({super.key, this.artworkWidth = 92});
 
   final double artworkWidth;
 
@@ -44,7 +42,7 @@ class SanadAuthLogo extends StatelessWidget {
                 width: assetSize,
                 height: assetSize,
                 fit: BoxFit.contain,
-                color: Colors.black,
+                color: AppColor.logoTint,
                 colorBlendMode: BlendMode.srcIn,
                 filterQuality: FilterQuality.high,
               ),

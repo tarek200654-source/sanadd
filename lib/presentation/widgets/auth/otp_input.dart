@@ -197,18 +197,18 @@ class _OtpInputState extends State<OtpInput> {
                             decoration: InputDecoration(
                               counterText: '',
                               filled: true,
-                              fillColor: const Color(0xFFF9F9F9),
+                              fillColor: AppColor.otpInputFill,
                               contentPadding: EdgeInsets.zero,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFFE5E5E5),
+                                  color: AppColor.otpInputBorder,
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFFE5E5E5),
+                                  color: AppColor.otpInputBorder,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(

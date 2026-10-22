@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'firebase_options.dart';
+import 'core/constants/app_constants.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/localization/locale_scope.dart';
@@ -32,7 +33,7 @@ class SanadApp extends StatelessWidget {
     final isArabic = context.localeController.locale.languageCode == 'ar';
 
     return MaterialApp(
-      title: 'SANAD',
+      title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppColor.theme(isArabic: isArabic),
       locale: context.localeController.locale,

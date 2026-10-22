@@ -1,143 +1,401 @@
-/// ثوابت التطبيق
+/// Application-wide product and reference data.
 abstract final class AppConstants {
   static const String appName = 'SANAD';
-  static const String appTagline =
-      'Context-aware care for patients and their families';
   static const String splashRoute = '/';
+
+  // Wearable sensor identifiers shared with device and health data layers.
   static const String imuSensor = 'IMU';
   static const String barometerSensor = 'Barometer';
   static const String ppgSensor = 'PPG';
-  static const String emergencyMedicalIdRoute = '/emergency-medical-id';
 
-  // ===== ألوان الخطوط =====
-  static const String line1Color = '#FF0000'; // أحمر
-  static const String line2Color = '#0066CC'; // أزرق
-  static const String line3Color = '#00AA00'; // أخضر
+  static const String defaultCountryName = 'Egypt';
+  static const String defaultCountryCallingCode = '+20';
+  static const int defaultNationalNumberLength = 10;
+  static const AppCountryConfig defaultCountry = AppCountryConfig(
+    callingCode: defaultCountryCallingCode,
+    nationalNumberLength: defaultNationalNumberLength,
+    flag: '🇪🇬',
+  );
+  static const Map<String, AppCountryConfig> countries = {
+    'Egypt': defaultCountry,
+    'Saudi Arabia': AppCountryConfig(
+      callingCode: '+966',
+      nationalNumberLength: 9,
+      flag: '🇸🇦',
+    ),
+    'UAE': AppCountryConfig(
+      callingCode: '+971',
+      nationalNumberLength: 9,
+      flag: '🇦🇪',
+    ),
+    'Kuwait': AppCountryConfig(
+      callingCode: '+965',
+      nationalNumberLength: 8,
+      flag: '🇰🇼',
+    ),
+    'Qatar': AppCountryConfig(
+      callingCode: '+974',
+      nationalNumberLength: 8,
+      flag: '🇶🇦',
+    ),
+    'Oman': AppCountryConfig(
+      callingCode: '+968',
+      nationalNumberLength: 8,
+      flag: '🇴🇲',
+    ),
+    'Bahrain': AppCountryConfig(
+      callingCode: '+973',
+      nationalNumberLength: 8,
+      flag: '🇧🇭',
+    ),
+    'Jordan': AppCountryConfig(
+      callingCode: '+962',
+      nationalNumberLength: 9,
+      flag: '🇯🇴',
+    ),
+    'USA': AppCountryConfig(
+      callingCode: '+1',
+      nationalNumberLength: 10,
+      flag: '🇺🇸',
+    ),
+    'UK': AppCountryConfig(
+      callingCode: '+44',
+      nationalNumberLength: 10,
+      flag: '🇬🇧',
+    ),
+  };
 
-  // ===== أسماء الخطوط =====
-  static const String line1Name = 'الخط الأول';
-  static const String line2Name = 'الخط الثاني';
-  static const String line3Name = 'الخط الثالث';
+  static const List<String> signUpCountryNames = [
+    'Egypt',
+    'Saudi Arabia',
+    'UAE',
+    'USA',
+    'UK',
+  ];
 
-  // ===== أسعار التذاكر =====
-  static const double fare1To9 = 8.0; // 1-9 محطات
-  static const double fare10To16 = 10.0; // 10-16 محطة
-  static const double fare17To23 = 15.0; // 17-23 محطة
-  static const double fare24Plus = 20.0; // 24+ محطة
+  static List<String> get signUpCountryCallingCodes => signUpCountryNames
+      .map((countryName) => countries[countryName]!.callingCode)
+      .toList(growable: false);
 
-  // ===== أوقات الرحلة =====
-  static const int timePerStation = 2; // دقائق لكل محطة
-  static const int timePerTransfer = 4; // دقائق لكل تبديل
+  static const Map<String, List<String>> governoratesArByCountry = {
+    'Egypt': [
+      'القاهرة',
+      'الإسكندرية',
+      'الجيزة',
+      'الدقهلية',
+      'البحر الأحمر',
+      'البحيرة',
+      'الفيوم',
+      'الغربية',
+      'الإسماعيلية',
+      'المنوفية',
+      'المنيا',
+      'القليوبية',
+      'الوادي الجديد',
+      'الشرقية',
+      'سوهاج',
+      'جنوب سيناء',
+      'السويس',
+      'الأقصر',
+      'قنا',
+      'بني سويف',
+      'بورسعيد',
+      'دمياط',
+      'مطروح',
+      'شمال سيناء',
+      'كفر الشيخ',
+      'أسيوط',
+      'أسوان',
+    ],
+    'Saudi Arabia': [
+      'الرياض',
+      'مكة المكرمة',
+      'المدينة المنورة',
+      'المنطقة الشرقية',
+      'القصيم',
+      'تبوك',
+      'حائل',
+      'جازان',
+      'عسير',
+      'نجران',
+      'الجوف',
+      'الحدود الشمالية',
+      'الباحة',
+    ],
+    'UAE': [
+      'أبو ظبي',
+      'دبي',
+      'الشارقة',
+      'عجمان',
+      'أم القيوين',
+      'رأس الخيمة',
+      'الفجيرة',
+    ],
+    'Kuwait': [
+      'العاصمة',
+      'حولي',
+      'الأحمدي',
+      'الجهراء',
+      'الفروانية',
+      'مبارك الكبير',
+    ],
+    'Qatar': [
+      'الدوحة',
+      'الريان',
+      'الوكرة',
+      'الخور',
+      'الشمال',
+      'الظعاين',
+      'أم صلال',
+      'الشيحانية',
+    ],
+    'Oman': [
+      'مسقط',
+      'ظفار',
+      'مسندم',
+      'البريمي',
+      'الداخلية',
+      'الظاهرة',
+      'شمال الباطنة',
+      'جنوب الباطنة',
+      'شمال الشرقية',
+      'جنوب الشرقية',
+      'الوسطى',
+    ],
+    'Bahrain': ['العاصمة', 'المحرق', 'الشمالية', 'الجنوبية'],
+    'Jordan': [
+      'عمان',
+      'إربد',
+      'الزرقاء',
+      'المفرق',
+      'عجلون',
+      'جرش',
+      'مادبا',
+      'البلقاء',
+      'الكرك',
+      'الطفيلة',
+      'معان',
+      'العقبة',
+    ],
+    'USA': [
+      'ألاباما',
+      'ألاسكا',
+      'أريزونا',
+      'أركنساس',
+      'كاليفورنيا',
+      'كولورادو',
+      'كونيتيكت',
+      'ديلاوير',
+      'فلوريدا',
+      'جورجيا',
+      'هاواي',
+      'أيداهو',
+      'إلينوي',
+      'إنديانا',
+      'أيووا',
+      'كانساس',
+      'كنتاكي',
+      'لويزيانا',
+      'مين',
+      'ماريلاند',
+      'ماساتشوستس',
+      'ميشيغان',
+      'مينيسوتا',
+      'ميسيسيبي',
+      'ميسوري',
+      'مونتانا',
+      'نبراسكا',
+      'نيفادا',
+      'نيو هامبشاير',
+      'نيوجيرسي',
+      'نيو مكسيكو',
+      'نيويورك',
+      'نورث كارولينا',
+      'نورث داكوتا',
+      'أوهايو',
+      'أوكلاهوما',
+      'أوريغون',
+      'بنسلفانيا',
+      'رود آيلاند',
+      'ساوث كارولينا',
+      'ساوث داكوتا',
+      'تينيسي',
+      'تكساس',
+      'يوتا',
+      'فيرمونت',
+      'فرجينيا',
+      'واشنطن',
+      'فرجينيا الغربية',
+      'ويسكونسن',
+      'وايومنغ',
+    ],
+    'UK': ['إنجلترا', 'اسكتلندا', 'ويلز', 'أيرلندا الشمالية'],
+  };
 
-  // ===== رسائل النظام =====
-  static const String errorStationNotFound = 'محطة غير موجودة';
-  static const String errorNoRoute = 'لا يوجد مسار للرحلة';
-  static const String errorNoInterchange = 'لا توجد محطات تبديل';
-  static const String errorSameStation = 'أنت بالفعل في المحطة المطلوبة';
+  static const Map<String, List<String>> governoratesEnByCountry = {
+    'Egypt': [
+      'Cairo',
+      'Alexandria',
+      'Giza',
+      'Dakahlia',
+      'Red Sea',
+      'Beheira',
+      'Fayoum',
+      'Gharbia',
+      'Ismailia',
+      'Monufia',
+      'Minya',
+      'Qalyubia',
+      'New Valley',
+      'Sharqia',
+      'Sohag',
+      'South Sinai',
+      'Suez',
+      'Luxor',
+      'Qena',
+      'Beni Suef',
+      'Port Said',
+      'Damietta',
+      'Matrouh',
+      'North Sinai',
+      'Kafr El Sheikh',
+      'Asyut',
+      'Aswan',
+    ],
+    'Saudi Arabia': [
+      'Riyadh',
+      'Makkah',
+      'Madinah',
+      'Eastern Province',
+      'Qassim',
+      'Tabuk',
+      'Hail',
+      'Jazan',
+      'Asir',
+      'Najran',
+      'Al Jawf',
+      'Northern Borders',
+      'Al Bahah',
+    ],
+    'UAE': [
+      'Abu Dhabi',
+      'Dubai',
+      'Sharjah',
+      'Ajman',
+      'Umm Al Quwain',
+      'Ras Al Khaimah',
+      'Fujairah',
+    ],
+    'Kuwait': [
+      'Al Asimah',
+      'Hawalli',
+      'Al Ahmadi',
+      'Al Jahra',
+      'Farwaniya',
+      'Mubarak Al-Kabeer',
+    ],
+    'Qatar': [
+      'Doha',
+      'Al Rayyan',
+      'Al Wakrah',
+      'Al Khor',
+      'Al Shamal',
+      'Al Daayen',
+      'Umm Salal',
+      'Al Shahaniya',
+    ],
+    'Oman': [
+      'Muscat',
+      'Dhofar',
+      'Musandam',
+      'Al Buraimi',
+      'Ad Dakhiliyah',
+      'Ad Dhahirah',
+      'Al Batinah North',
+      'Al Batinah South',
+      'Ash Sharqiyah North',
+      'Ash Sharqiyah South',
+      'Al Wusta',
+    ],
+    'Bahrain': ['Capital', 'Muharraq', 'Northern', 'Southern'],
+    'Jordan': [
+      'Amman',
+      'Irbid',
+      'Zarqa',
+      'Mafraq',
+      'Ajloun',
+      'Jerash',
+      'Madaba',
+      'Balqa',
+      'Karak',
+      'Tafileh',
+      'Ma\'an',
+      'Aqaba',
+    ],
+    'USA': [
+      'Alabama',
+      'Alaska',
+      'Arizona',
+      'Arkansas',
+      'California',
+      'Colorado',
+      'Connecticut',
+      'Delaware',
+      'Florida',
+      'Georgia',
+      'Hawaii',
+      'Idaho',
+      'Illinois',
+      'Indiana',
+      'Iowa',
+      'Kansas',
+      'Kentucky',
+      'Louisiana',
+      'Maine',
+      'Maryland',
+      'Massachusetts',
+      'Michigan',
+      'Minnesota',
+      'Mississippi',
+      'Missouri',
+      'Montana',
+      'Nebraska',
+      'Nevada',
+      'New Hampshire',
+      'New Jersey',
+      'New Mexico',
+      'New York',
+      'North Carolina',
+      'North Dakota',
+      'Ohio',
+      'Oklahoma',
+      'Oregon',
+      'Pennsylvania',
+      'Rhode Island',
+      'South Carolina',
+      'South Dakota',
+      'Tennessee',
+      'Texas',
+      'Utah',
+      'Vermont',
+      'Virginia',
+      'Washington',
+      'West Virginia',
+      'Wisconsin',
+      'Wyoming',
+    ],
+    'UK': ['England', 'Scotland', 'Wales', 'Northern Ireland'],
+  };
+}
 
-  // ===== رسائل النجاح =====
-  static const String successRouteFound = 'تم العثور على المسار';
-  static const String successJourneyCalculated = 'تم حساب الرحلة بنجاح';
+class AppCountryConfig {
+  const AppCountryConfig({
+    required this.callingCode,
+    required this.nationalNumberLength,
+    required this.flag,
+  });
 
-  // ===== رسائل التوجيه =====
-  static const String directionNorth = 'اتجاه الشمال';
-  static const String directionSouth = 'اتجاه الجنوب';
-  static const String directionEast = 'اتجاه الشرق';
-  static const String directionWest = 'اتجاه الغرب';
-
-  // ===== رسائل التبديل =====
-  static const String transferMessage = 'هتنزل تبدل من محطة';
-  static const String transferToLine = 'لخط';
-  static const String transferDirection = 'في اتجاه';
-
-  // ===== رسائل الركوب =====
-  static const String boardingMessage = 'هتركب من محطة';
-  static const String destinationMessage = 'توصل لمحطة';
-
-  // ===== أسماء محطات التبديل الرئيسية =====
-  static const String interchangeSadat = 'السادات';
-  static const String interchangeShohada = 'الشهداء';
-  static const String interchangeGamalAbdelNasser = 'جمال عبد الناصر';
-  static const String interchangeAtaba = 'العتبة';
-  static const String interchangeCairoUniversity = 'جامعة القاهرة';
-
-  // ===== حدود البحث =====
-  static const int maxSearchResults = 20;
-  static const int minSearchQueryLength = 2;
-
-  // ===== حدود الخريطة =====
-  static const double defaultLatitude = 30.0444; // القاهرة
-  static const double defaultLongitude = 31.2357;
-  static const double mapZoomLevel = 12.0;
-
-  // ===== أحجام العناصر =====
-  static const double stationCardHeight = 80.0;
-  static const double stationCardWidth = double.infinity;
-  static const double lineIndicatorSize = 16.0;
-  static const double stationIconSize = 24.0;
-
-  // ===== مسافات التباعد =====
-  static const double smallPadding = 8.0;
-  static const double mediumPadding = 16.0;
-  static const double largePadding = 24.0;
-  static const double extraLargePadding = 32.0;
-
-  // ===== أحجام الخطوط =====
-  static const double smallFontSize = 12.0;
-  static const double mediumFontSize = 14.0;
-  static const double largeFontSize = 16.0;
-  static const double extraLargeFontSize = 18.0;
-  static const double titleFontSize = 20.0;
-  static const double headingFontSize = 24.0;
-
-  // ===== أزمنة الرسوم المتحركة =====
-  static const Duration shortAnimation = Duration(milliseconds: 200);
-  static const Duration mediumAnimation = Duration(milliseconds: 300);
-  static const Duration longAnimation = Duration(milliseconds: 500);
-
-  // ===== أزمنة التأخير =====
-  static const Duration shortDelay = Duration(milliseconds: 100);
-  static const Duration mediumDelay = Duration(milliseconds: 300);
-  static const Duration longDelay = Duration(milliseconds: 1000);
-
-  // ===== أحجام الصور =====
-  static const double logoSize = 48.0;
-  static const double avatarSize = 40.0;
-  static const double bannerHeight = 200.0;
-
-  // ===== حدود التطبيق =====
-  static const int maxRecentSearches = 10;
-  static const int maxFavoriteStations = 20;
-  static const int maxRouteHistory = 50;
-
-  // ===== مفاتيح التخزين =====
-  static const String keyFirstTime = 'firstTime';
-  static const String keyRecentSearches = 'recentSearches';
-  static const String keyFavoriteStations = 'favoriteStations';
-  static const String keyRouteHistory = 'routeHistory';
-  static const String keyUserPreferences = 'userPreferences';
-
-  // ===== قيم افتراضية =====
-  static const String defaultGreeting = 'مرحباً بك';
-  static const String defaultStation = 'اختر المحطة';
-  static const String defaultLine = 'جميع الخطوط';
-
-  // ===== أنماط التصميم =====
-  static const double borderRadius = 12.0;
-  static const double cardElevation = 4.0;
-  static const double buttonHeight = 48.0;
-  static const double inputFieldHeight = 56.0;
-
-  // ===== ألوان النظام =====
-  static const String primaryColor = '#FF0000'; // أحمر المترو
-  static const String secondaryColor = '#0066CC'; // أزرق
-  static const String accentColor = '#00AA00'; // أخضر
-  static const String backgroundColor = '#FFFFFF'; // أبيض
-  static const String surfaceColor = '#F5F5F5'; // رمادي فاتح
-  static const String textColor = '#000000'; // أسود
-  static const String textLightColor = '#666666'; // رمادي
-  static const String errorColor = '#FF0000'; // أحمر خطأ
-  static const String successColor = '#00AA00'; // أخضر نجاح
-  static const String warningColor = '#FFA500'; // برتقالي تحذير
-  static const String infoColor = '#0066CC'; // أزرق معلومات
+  final String callingCode;
+  final int nationalNumberLength;
+  final String flag;
 }

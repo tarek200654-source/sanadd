@@ -1,0 +1,14 @@
+{
+  "name": "sanad-firestore-rules-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test rules.test.mjs",
+    "emulator:test": "firebase emulators:exec --config ../../firebase.rules-test.json --project demo-sanad --only firestore \"npm test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.1.0",
+    "firebase-tools": "^15.34.1"
+  }
+}

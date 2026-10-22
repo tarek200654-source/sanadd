@@ -68,6 +68,10 @@ class AppLocalizations {
   String get homeSubtitle => isArabic
       ? 'تطبيق رعاية متصل بالمرضى وعائلاتهم'
       : 'Connected care for patients and their families';
+  String get signOutLabel => isArabic ? 'تسجيل الخروج' : 'Sign out';
+  String get signOutFailed => isArabic
+      ? 'تعذر تسجيل الخروج. حاول مرة أخرى.'
+      : 'Could not sign out. Please try again.';
 
   String get loginTitle =>
       isArabic ? 'سجّل الدخول إلى حسابك' : 'Log in to your account';
@@ -107,6 +111,24 @@ class AppLocalizations {
   String get signInPreviewMessage => isArabic
       ? 'سيتم ربط تسجيل الدخول لاحقًا. لم يتم إنشاء جلسة دخول.'
       : 'Sign-in will be connected later. No account session was created.';
+  String get authInvalidCredentials => isArabic
+      ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
+      : 'The email or password is incorrect.';
+  String get authNetworkError => isArabic
+      ? 'تعذر الاتصال. تحقق من الإنترنت وحاول مرة أخرى.'
+      : 'Could not connect. Check your internet and try again.';
+  String get authEmailAlreadyUsed => isArabic
+      ? 'هذا البريد الإلكتروني مستخدم بالفعل.'
+      : 'This email address is already in use.';
+  String get authUsernameTaken => isArabic
+      ? 'اسم المستخدم مستخدم بالفعل.'
+      : 'That username is already taken.';
+  String get authProfileIncomplete => isArabic
+      ? 'بيانات الملف الشخصي غير مكتملة لإنشاء الحساب.'
+      : 'Required profile information is missing, so the account was not created.';
+  String get authGenericError => isArabic
+      ? 'تعذر إكمال العملية. حاول مرة أخرى.'
+      : 'We could not complete the request. Please try again.';
   String get comingSoonMessage =>
       isArabic ? 'هذه الميزة ستتوفر قريبًا.' : 'This feature is coming soon.';
   String fieldRequired(String field) =>
@@ -119,6 +141,12 @@ class AppLocalizations {
   String get nameTooLongMessage => isArabic
       ? 'يجب ألا يتجاوز الاسم 80 حرفًا.'
       : 'Name must be 80 characters or fewer.';
+  String get usernameTooShortMessage => isArabic
+      ? 'يجب أن يتكون اسم المستخدم من 4 أحرف على الأقل.'
+      : 'Username must be at least 4 characters.';
+  String get invalidUsernameMessage => isArabic
+      ? 'استخدم أحرفًا إنجليزية أو أرقامًا أو نقطة أو شرطة سفلية فقط.'
+      : 'Use English letters, numbers, periods, or underscores only.';
   String get passwordRequirementsMessage => isArabic
       ? 'يجب استيفاء متطلبات كلمة المرور.'
       : 'Meet all password requirements.';

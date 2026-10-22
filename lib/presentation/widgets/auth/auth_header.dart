@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_color.dart';
+import '../shared_widgets/app_back_button.dart';
 import 'sanad_auth_logo.dart';
 
 class AuthPageLayout extends StatelessWidget {
@@ -96,6 +97,7 @@ class AuthHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final onBack = this.onBack;
     final isBranded = topBarTitle == null || topBarTitle == l10n.appName;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -111,20 +113,12 @@ class AuthHeader extends StatelessWidget {
                   child: Semantics(
                     button: true,
                     label: l10n.back,
-                    child: IconButton(
+                    child: AppBackButton(
+                      buttonSize: 44,
+                      imageSize: 18,
                       onPressed: onBack,
-                      icon: Icon(
-                        Directionality.of(context) == TextDirection.rtl
-                            ? Icons.arrow_forward_rounded
-                            : Icons.arrow_back_rounded,
-                      ),
                       tooltip: l10n.back,
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColor.surfaceMuted,
-                        minimumSize: const Size(44, 44),
-                        maximumSize: const Size(44, 44),
-                        padding: EdgeInsets.zero,
-                      ),
+                      backgroundColor: AppColor.surfaceMuted,
                     ),
                   ),
                 ),
@@ -163,13 +157,10 @@ class AuthHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColor.surface,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColor.border.withValues(alpha: 0.8),
-                    width: 1.2,
-                  ),
+                  border: Border.all(color: AppColor.borderSubtle, width: 1.2),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x0A000000),
+                      color: AppColor.authHeaderShadow,
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),

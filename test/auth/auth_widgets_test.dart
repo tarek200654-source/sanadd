@@ -11,7 +11,7 @@ import 'package:sanad/presentation/widgets/auth/otp_input.dart';
 import 'package:sanad/presentation/widgets/auth/password_requirements.dart';
 import 'package:sanad/presentation/widgets/auth/auth_text_field.dart';
 import 'package:sanad/presentation/widgets/auth/verification_method_card.dart';
-import 'package:sanad/presentation/widgets/sanad_button.dart';
+import 'package:sanad/presentation/widgets/shared_widgets/sanad_button.dart';
 
 void main() {
   Widget app(Widget child, {Locale locale = const Locale('en')}) {
@@ -142,7 +142,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName ==
+                'assets/images/back_to_right.png',
+      ),
+      findsOneWidget,
+    );
     expect(find.bySemanticsLabel('شعار سند'), findsOneWidget);
   });
 

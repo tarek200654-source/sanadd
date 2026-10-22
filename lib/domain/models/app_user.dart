@@ -6,6 +6,12 @@ class AppUser {
     required this.name,
     required this.email,
     required this.role,
+    this.username,
+    this.firstName,
+    this.lastName,
+    this.country,
+    this.region,
+    this.address,
     this.phoneNumber,
     this.createdAt,
   });
@@ -14,8 +20,23 @@ class AppUser {
   final String name;
   final String email;
   final UserRole role;
+  final String? username;
+  final String? firstName;
+  final String? lastName;
+  final String? country;
+  final String? region;
+  final String? address;
   final String? phoneNumber;
   final DateTime? createdAt;
+
+  bool get hasCompleteRegistrationProfile =>
+      _hasValue(username) &&
+      _hasValue(firstName) &&
+      _hasValue(lastName) &&
+      _hasValue(country) &&
+      _hasValue(region) &&
+      _hasValue(address) &&
+      _hasValue(phoneNumber);
 
   factory AppUser.fromFirestore({
     required String uid,
@@ -44,6 +65,12 @@ class AppUser {
       name: name,
       email: email,
       role: userRoleFromString(data['role']),
+      username: data['username'] as String?,
+      firstName: data['firstName'] as String?,
+      lastName: data['lastName'] as String?,
+      country: data['country'] as String?,
+      region: data['region'] as String?,
+      address: data['address'] as String?,
       phoneNumber: data['phoneNumber'] as String?,
       createdAt: createdAt,
     );
@@ -56,6 +83,13 @@ class AppUser {
       'role': role.value,
     };
 
+    _addIfPresent(data, 'username', username);
+    _addIfPresent(data, 'firstName', firstName);
+    _addIfPresent(data, 'lastName', lastName);
+    _addIfPresent(data, 'country', country);
+    _addIfPresent(data, 'region', region);
+    _addIfPresent(data, 'address', address);
+
     if (phoneNumber != null && phoneNumber!.isNotEmpty) {
       data['phoneNumber'] = phoneNumber;
     }
@@ -67,6 +101,14 @@ class AppUser {
     return data;
   }
 
+  static void _addIfPresent(
+    Map<String, dynamic> data,
+    String key,
+    String? value,
+  ) {
+    if (value != null && value.isNotEmpty) data[key] = value;
+  }
+
   static String _requiredString(Object? value, String fieldName) {
     if (value is String && value.trim().isNotEmpty) {
       return value.trim();
@@ -74,4 +116,7 @@ class AppUser {
 
     throw FormatException('Invalid $fieldName value for AppUser.');
   }
+
+  static bool _hasValue(String? value) =>
+      value != null && value.trim().isNotEmpty;
 }

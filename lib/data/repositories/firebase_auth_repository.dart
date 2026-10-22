@@ -33,7 +33,7 @@ class FirebaseAuthRepository implements AuthRepository {
       }
       return uid;
     } on FirebaseAuthException catch (error, stackTrace) {
-      throw _mapFirebaseAuthException(error, stackTrace);
+      throw mapFirebaseAuthException(error, stackTrace);
     }
   }
 
@@ -53,7 +53,7 @@ class FirebaseAuthRepository implements AuthRepository {
       }
       return uid;
     } on FirebaseAuthException catch (error, stackTrace) {
-      throw _mapFirebaseAuthException(error, stackTrace);
+      throw mapFirebaseAuthException(error, stackTrace);
     }
   }
 
@@ -62,7 +62,7 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       await _firebaseAuth.signOut();
     } on FirebaseAuthException catch (error, stackTrace) {
-      throw _mapFirebaseAuthException(error, stackTrace);
+      throw mapFirebaseAuthException(error, stackTrace);
     }
   }
 
@@ -74,12 +74,12 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       await user.delete();
     } on FirebaseAuthException catch (error, stackTrace) {
-      throw _mapFirebaseAuthException(error, stackTrace);
+      throw mapFirebaseAuthException(error, stackTrace);
     }
   }
 }
 
-AuthFailure _mapFirebaseAuthException(
+AuthFailure mapFirebaseAuthException(
   FirebaseAuthException error,
   StackTrace stackTrace,
 ) {

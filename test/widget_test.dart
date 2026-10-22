@@ -9,7 +9,7 @@ import 'package:sanad/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:sanad/presentation/screens/role_selection/role_selection_screen.dart';
 import 'package:sanad/presentation/screens/login_screen/login_screen.dart';
 import 'package:sanad/domain/models/user_role.dart';
-import 'package:sanad/presentation/widgets/sanad_button.dart';
+import 'package:sanad/presentation/widgets/shared_widgets/sanad_button.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));

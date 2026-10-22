@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../../application/auth/auth_service.dart';
 import '../../../core/assets/app_assets.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_color.dart';
+import '../../../domain/models/app_user.dart';
 import '../../../utils/routes.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, this.authService});
 
   static const String routeName = AppConstants.splashRoute;
+  final AuthService? authService;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -19,11 +22,27 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(const Duration(milliseconds: 1400), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
-      }
-    });
+    _restoreSession();
+  }
+
+  Future<void> _restoreSession() async {
+    await Future<void>.delayed(const Duration(milliseconds: 1400));
+    final user = await _loadCurrentUser();
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(
+      context,
+      user == null ? AppRoutes.onboarding : AppRoutes.home,
+    );
+  }
+
+  Future<AppUser?> _loadCurrentUser() async {
+    try {
+      return await (widget.authService ?? AuthService.firebase())
+          .restoreCurrentUser();
+    } catch (_) {
+      // Keep the existing first-run route available when Firebase is not ready.
+      return null;
+    }
   }
 
   @override

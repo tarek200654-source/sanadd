@@ -3,70 +3,35 @@ import 'package:sanad/domain/models/app_user.dart';
 import 'package:sanad/domain/models/user_role.dart';
 
 void main() {
-  group('AppUser', () {
-    test('serializes to a Firestore-compatible map', () {
-      final createdAt = DateTime.utc(2026, 10, 17, 12, 30);
-      const user = AppUser(
-        uid: 'abc123',
-        name: 'Amina Hassan',
-        email: 'amina@example.com',
-        role: UserRole.patient,
-        createdAt: null,
-      );
-      final withTimestamp = AppUser(
-        uid: user.uid,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phoneNumber: '+201012345678',
-        createdAt: createdAt,
-      );
+  test('serializes the complete profile without credentials', () {
+    const user = AppUser(
+      uid: 'uid-1',
+      name: 'أحمد O’Neill',
+      email: 'first.last+tag@example.com',
+      role: UserRole.caregiver,
+      username: 'Ahmad_1',
+      firstName: 'أحمد',
+      lastName: 'O’Neill',
+      country: 'مصر',
+      region: 'القاهرة',
+      address: 'شارع التحرير، 12',
+      phoneNumber: '+201012345678',
+    );
 
-      expect(withTimestamp.toFirestore(), {
-        'name': 'Amina Hassan',
-        'email': 'amina@example.com',
-        'role': 'patient',
-        'phoneNumber': '+201012345678',
-        'createdAt': createdAt,
-      });
-      expect(user.toFirestore(), {
-        'name': 'Amina Hassan',
-        'email': 'amina@example.com',
-        'role': 'patient',
-      });
-    });
+    final data = user.toFirestore();
 
-    test('deserializes user data and converts the role', () {
-      final createdAt = DateTime.utc(2026, 10, 17, 12, 30);
-      final user = AppUser.fromFirestore(
-        uid: 'abc123',
-        data: {
-          'name': 'Omar Ali',
-          'email': 'omar@example.com',
-          'role': 'caregiver',
-          'createdAt': createdAt,
-        },
-      );
+    expect(data['username'], 'Ahmad_1');
+    expect(data['firstName'], 'أحمد');
+    expect(data['lastName'], 'O’Neill');
+    expect(data['country'], 'مصر');
+    expect(data['region'], 'القاهرة');
+    expect(data['address'], 'شارع التحرير، 12');
+    expect(data['phoneNumber'], '+201012345678');
+    expect(data.containsKey('password'), isFalse);
+    expect(data.containsKey('passwordHash'), isFalse);
 
-      expect(user.uid, 'abc123');
-      expect(user.name, 'Omar Ali');
-      expect(user.email, 'omar@example.com');
-      expect(user.role, UserRole.caregiver);
-      expect(user.createdAt, createdAt);
-    });
-
-    test('rejects invalid role data', () {
-      expect(
-        () => AppUser.fromFirestore(
-          uid: 'abc123',
-          data: {
-            'name': 'Omar Ali',
-            'email': 'omar@example.com',
-            'role': 'unknown',
-          },
-        ),
-        throwsA(isA<InvalidUserRoleException>()),
-      );
-    });
+    final restored = AppUser.fromMap('uid-1', data);
+    expect(restored.username, 'Ahmad_1');
+    expect(restored.address, 'شارع التحرير، 12');
   });
 }

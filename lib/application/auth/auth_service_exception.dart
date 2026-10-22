@@ -2,6 +2,7 @@ enum AuthServiceFailureType {
   missingUserProfile,
   profileReadFailed,
   profileCreationFailed,
+  usernameTaken,
   registrationRollbackFailed,
 }
 
@@ -26,6 +27,7 @@ class AuthServiceException implements Exception {
     AuthServiceFailureType.missingUserProfile => 'missing-user-profile',
     AuthServiceFailureType.profileReadFailed => 'profile-read-failed',
     AuthServiceFailureType.profileCreationFailed => 'profile-creation-failed',
+    AuthServiceFailureType.usernameTaken => 'username-taken',
     AuthServiceFailureType.registrationRollbackFailed =>
       'registration-rollback-failed',
   };

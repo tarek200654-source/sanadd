@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validUsername(value) {
+      return value is string
+        && value.size() >= 4
+        && value.size() <= 15
+        && value.matches('^[A-Za-z0-9._]+$');
+    }
+
+    function validNewProfile(uid) {
+      let data = request.resource.data;
+      let reservation = getAfter(
+        /databases/$(database)/documents/usernames/$(data.username.lower())
+      );
+      return data.keys().hasAll([
+          'name', 'email', 'role', 'username', 'firstName', 'lastName',
+          'country', 'region', 'address', 'phoneNumber', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'name', 'email', 'role', 'username', 'firstName', 'lastName',
+          'country', 'region', 'address', 'phoneNumber', 'createdAt'
+        ])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 161
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 254
+        && data.email == request.auth.token.email
+        && data.role in ['patient', 'caregiver']
+        && validUsername(data.username)
+        && data.firstName is string && data.firstName.size() > 0 && data.firstName.size() <= 80
+        && data.lastName is string && data.lastName.size() > 0 && data.lastName.size() <= 80
+        && data.country is string && data.country.size() > 0 && data.country.size() <= 80
+        && data.region is string && data.region.size() > 0 && data.region.size() <= 80
+        && data.address is string && data.address.size() > 0 && data.address.size() <= 250
+        && data.phoneNumber is string && data.phoneNumber.matches('^\\+[0-9]{7,15}$')
+        && data.createdAt is timestamp
+        && reservation.data.reserved == true;
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && validNewProfile(uid);
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.username == resource.data.username;
+      allow delete: if false;
+    }
+
+    match /usernames/{usernameId} {
+      // Availability checks read only one canonical document; enumeration is denied.
+      allow get: if true;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['reserved'])
+        && request.resource.data.reserved == true
+        && validUsername(usernameId)
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username.lower() == usernameId;
+      allow update, delete: if false;
+    }
+  }
+}
