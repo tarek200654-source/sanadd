@@ -92,15 +92,27 @@ class LoginOtpForm extends StatelessWidget {
                               focusNode: focusNodes[i],
                               enabled: !loading,
                               textAlign: TextAlign.center,
+                              textAlignVertical: TextAlignVertical.center,
                               keyboardType: TextInputType.number,
                               maxLength: 1,
+                              autofillHints: i == 0
+                                  ? const [AutofillHints.oneTimeCode]
+                                  : null,
                               style: t(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w900,
                                 color: context.sanadText,
+                                height: 1,
+                              ),
+                              strutStyle: const StrutStyle(
+                                fontSize: 28,
+                                height: 1,
+                                forceStrutHeight: true,
                               ),
                               decoration: const InputDecoration(
                                 counterText: '',
+                                isCollapsed: true,
+                                contentPadding: EdgeInsets.zero,
                                 border: InputBorder.none,
                               ),
                               onChanged: (v) {

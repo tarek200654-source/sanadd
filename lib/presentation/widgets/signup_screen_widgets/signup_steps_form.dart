@@ -32,7 +32,7 @@ class SignupStepsForm extends StatelessWidget {
       password,
       confirm;
   final bool usernameError, emailError;
-  final bool usernameChecking;
+  final bool usernameChecking, emailChecking;
   final String? usernameHint, emailHint;
   final bool? usernameTaken, emailInvalid;
   final VoidCallback onToggleObscure,
@@ -73,6 +73,7 @@ class SignupStepsForm extends StatelessWidget {
     this.usernameError = false,
     this.emailError = false,
     this.usernameChecking = false,
+    this.emailChecking = false,
     this.usernameHint,
     this.emailHint,
     this.usernameTaken,
@@ -97,7 +98,8 @@ class SignupStepsForm extends StatelessWidget {
     bool canNext = switch (regStep) {
       0 =>
         AuthValidators.validateEmail(email.text) == null &&
-            emailInvalid == false,
+            emailInvalid == false &&
+            !emailChecking,
       1 => username.text.length >= 4 && usernameTaken == false,
       2 => first.text.trim().isNotEmpty && last.text.trim().isNotEmpty,
       3 => passMatch && AuthValidators.validatePassword(password.text) == null,
@@ -249,9 +251,14 @@ class SignupStepsForm extends StatelessWidget {
               isArabic: isArabic,
               icon: Icons.mail_outline_rounded,
               error: emailError,
-              helperText: emailHint,
-              helperColor: emailInvalid == true
+              helperText: emailChecking
+                  ? (isArabic ? 'جارٍ التحقق من البريد…' : 'Checking email…')
+                  : emailHint,
+              helperColor: emailError || emailInvalid == true
                   ? AppColor.loginError
+                  : emailHint?.startsWith('تعذر فحص') == true ||
+                        emailHint?.startsWith('Could not check') == true
+                  ? context.sanadDim
                   : AppColor.loginAvailable,
               hint: 'example@email.com',
             ),
@@ -309,6 +316,7 @@ class SignupStepsForm extends StatelessWidget {
                   label: isArabic ? 'كلمة المرور' : 'Password',
                   controller: password,
                   obscure: obscure,
+                  allowCopy: false,
                   isArabic: isArabic,
                   icon: Icons.password_rounded,
                   suffix: IconButton(
@@ -330,6 +338,7 @@ class SignupStepsForm extends StatelessWidget {
                   label: isArabic ? 'التأكيد' : 'Confirm',
                   controller: confirm,
                   obscure: obscureConfirm,
+                  allowCopy: false,
                   isArabic: isArabic,
                   icon: Icons.password_rounded,
                   suffix: IconButton(

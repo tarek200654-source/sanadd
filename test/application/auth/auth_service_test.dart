@@ -185,4 +185,7 @@ class _FakeUserRepository implements UserRepository {
 
   @override
   Future<bool> isUsernameAvailable(String username) async => true;
+
+  @override
+  Future<bool> isEmailAvailable(String email) async => true;
 }

@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       Navigator.of(
         context,
-      ).pushNamedAndRemoveUntil(AppRoutes.onboarding, (_) => false);
+      ).pushNamedAndRemoveUntil(AppRoutes.splash, (_) => false);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -38,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.appName)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../application/auth/auth_service.dart';
 import '../../../core/assets/app_assets.dart';
@@ -28,10 +29,35 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _restoreSession() async {
     await Future<void>.delayed(const Duration(milliseconds: 1400));
     final user = await _loadCurrentUser();
+    SharedPreferences? preferences;
+    var onboardingCompleted = false;
+    try {
+      preferences = await SharedPreferences.getInstance();
+      onboardingCompleted =
+          preferences.getBool(AppConstants.onboardingCompletedPreferenceKey) ??
+          false;
+    } catch (_) {
+      // Missing local preferences should only affect first-run onboarding.
+    }
+    if (!mounted) return;
+    if (user != null && !onboardingCompleted) {
+      try {
+        await preferences?.setBool(
+          AppConstants.onboardingCompletedPreferenceKey,
+          true,
+        );
+      } catch (_) {
+        // Preserve navigation even when local storage is unavailable.
+      }
+    }
     if (!mounted) return;
     Navigator.pushReplacementNamed(
       context,
-      user == null ? AppRoutes.onboarding : AppRoutes.home,
+      user != null
+          ? AppRoutes.home
+          : onboardingCompleted
+          ? AppRoutes.login
+          : AppRoutes.onboarding,
     );
   }
 
@@ -49,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      backgroundColor: AppColor.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) => Column(

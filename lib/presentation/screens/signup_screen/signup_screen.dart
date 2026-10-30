@@ -43,6 +43,7 @@ class _SignUpScreenState extends State<SignUpScreen>
   bool _usernameError = false;
   bool _emailError = false;
   bool _checkingUsername = false;
+  bool _checkingEmail = false;
   bool? _usernameTaken;
   bool? _emailInvalid;
   String? _usernameHint;
@@ -64,6 +65,7 @@ class _SignUpScreenState extends State<SignUpScreen>
 
   Timer? _usernameDebounce;
   Timer? _emailDebounce;
+  String? _checkedEmail;
   late final AnimationController _animationController;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
@@ -185,21 +187,53 @@ class _SignUpScreenState extends State<SignUpScreen>
 
   void _onEmailChanged() {
     final value = _email.text.trim();
+    final valid = AuthValidators.validateEmail(value) == null;
     _emailDebounce?.cancel();
     setState(() {
       _emailInvalid = null;
       _emailHint = null;
       _emailError = false;
+      _checkingEmail = valid;
+      _checkedEmail = null;
     });
-    if (AuthValidators.validateEmail(value) != null) {
-      return;
-    }
-    _emailDebounce = Timer(const Duration(milliseconds: 450), () {
+    if (!valid) return;
+
+    _emailDebounce = Timer(const Duration(milliseconds: 450), () async {
       if (!mounted || _email.text.trim() != value) return;
-      setState(() {
-        _emailInvalid = false;
-        _emailHint = _isArabic ? 'صالح للمعاينة' : 'Valid for preview';
-      });
+      try {
+        final available = await (widget.authService ?? AuthService.firebase())
+            .isEmailAvailable(value);
+        if (!mounted || _email.text.trim() != value) return;
+        setState(() {
+          _checkingEmail = false;
+          _emailInvalid = !available;
+          _checkedEmail = value;
+          _emailError = !available;
+          _emailHint = available
+              ? (_isArabic ? 'البريد الإلكتروني متاح' : 'Email is available')
+              : (_isArabic
+                    ? 'البريد الإلكتروني مستخدم'
+                    : 'Email is already in use');
+        });
+      } catch (error) {
+        if (!mounted || _email.text.trim() != value) return;
+        final diagnostic = error is UserRepositoryException
+            ? '${error.code}: ${error.cause ?? error}'
+            : error;
+        debugPrint(
+          'Email availability check failed for ${value.toLowerCase()}: '
+          '$diagnostic',
+        );
+        setState(() {
+          _checkingEmail = false;
+          _checkedEmail = value;
+          _emailError = true;
+          _emailInvalid = true;
+          _emailHint = _isArabic
+              ? 'تعذر التحقق الآن'
+              : 'Could not check availability';
+        });
+      }
     });
   }
 
@@ -277,6 +311,23 @@ class _SignUpScreenState extends State<SignUpScreen>
   }
 
   void _nextStep() {
+    if (_step == 0 && AuthValidators.validateEmail(_email.text) != null) {
+      setState(() {
+        _emailError = true;
+        _emailHint = context.l10n.invalidEmailMessage;
+      });
+      return;
+    }
+    if (_step == 0 && _checkedEmail != _email.text.trim()) {
+      setState(() {
+        _emailError = true;
+        _emailHint = _isArabic
+            ? 'انتظر التحقق من البريد الإلكتروني'
+            : 'Wait for the email check to finish';
+      });
+      return;
+    }
+    if (_step == 0 && _emailInvalid != false) return;
     if (_step < 6) {
       FocusScope.of(context).unfocus();
       setState(() => _step++);
@@ -402,6 +453,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                               usernameError: _usernameError,
                               emailError: _emailError,
                               usernameChecking: _checkingUsername,
+                              emailChecking: _checkingEmail,
                               usernameHint: _usernameHint,
                               emailHint: _emailHint,
                               usernameTaken: _usernameTaken,

@@ -63,6 +63,7 @@ class ResetPasswordForm extends StatelessWidget {
           label: isArabic ? 'كلمة المرور' : 'Password',
           controller: pass,
           obscure: obscure,
+          allowCopy: false,
           isArabic: isArabic,
           icon: Icons.password_rounded,
           suffix: IconButton(
@@ -82,6 +83,7 @@ class ResetPasswordForm extends StatelessWidget {
           label: isArabic ? 'تأكيد كلمة المرور' : 'Confirm',
           controller: confirm,
           obscure: obscureConfirm,
+          allowCopy: false,
           isArabic: isArabic,
           icon: Icons.password_rounded,
           suffix: IconButton(

@@ -155,13 +155,47 @@ void main() {
     expect(find.byKey(const ValueKey('signup-username-field')), findsOneWidget);
   });
 
+  testWidgets(
+    'signup blocks the email step and shows a red error when availability check fails',
+    (tester) async {
+      final authService = AuthService(
+        authRepository: _FakeAuthRepository(),
+        userRepository: _FakeUserRepository(
+          emailAvailability: (_) async => throw StateError('Firestore offline'),
+        ),
+      );
+      await pumpAuthApp(
+        tester,
+        SignUpScreen(
+          arguments: const AuthRouteArguments(role: UserRole.caregiver),
+          authService: authService,
+        ),
+      );
+
+      await tester.enterText(
+        find.byKey(const ValueKey('signup-email-field')),
+        'newuser@example.com',
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump();
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Welcome, Start with email'), findsOneWidget);
+      expect(find.text('Could not check availability'), findsOneWidget);
+      final hint = tester.widget<Text>(find.text('Could not check availability'));
+      expect(hint.style?.color, AppColor.loginError);
+    },
+  );
+
   testWidgets('username availability failures are shown as errors', (
     tester,
   ) async {
     final authService = AuthService(
       authRepository: _FakeAuthRepository(),
       userRepository: _FakeUserRepository(
-        usernameAvailability: (_) async => throw StateError('Firestore offline'),
+        usernameAvailability: (_) async =>
+            throw StateError('Firestore offline'),
       ),
     );
     await pumpAuthApp(
@@ -186,7 +220,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump();
 
-    final feedback = tester.widget<Text>(find.text('Could not check availability'));
+    final feedback = tester.widget<Text>(
+      find.text('Could not check availability'),
+    );
     expect(feedback.style?.color, AppColor.loginError);
     final inputContainer = tester.widget<Container>(
       find
@@ -535,6 +571,10 @@ class _FakeOtpRepository implements OtpVerificationRepository {
   const _FakeOtpRepository();
 
   @override
+  Future<OtpDeliveryStatus> getDeliveryStatus(String challengeId) async =>
+      OtpDeliveryStatus.unknown;
+
+  @override
   Future<OtpChallenge> sendCode({
     required String phoneNumber,
     required String language,
@@ -592,9 +632,10 @@ class _FakeAuthRepository implements AuthRepository {
 }
 
 class _FakeUserRepository implements UserRepository {
-  _FakeUserRepository({this.usernameAvailability});
+  _FakeUserRepository({this.usernameAvailability, this.emailAvailability});
 
   final Future<bool> Function(String username)? usernameAvailability;
+  final Future<bool> Function(String email)? emailAvailability;
 
   @override
   Future<void> createUser(AppUser user) async {}
@@ -617,4 +658,8 @@ class _FakeUserRepository implements UserRepository {
   @override
   Future<bool> isUsernameAvailable(String username) async =>
       usernameAvailability?.call(username) ?? true;
+
+  @override
+  Future<bool> isEmailAvailable(String email) async =>
+      emailAvailability?.call(email) ?? true;
 }

@@ -9,6 +9,7 @@ class AuthFormInput extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final bool obscure, isArabic;
+  final bool allowCopy;
   final IconData? icon;
   final Widget? suffix, extraLabel, prefix;
   final bool error;
@@ -24,6 +25,7 @@ class AuthFormInput extends StatelessWidget {
     required this.controller,
     this.obscure = false,
     this.isArabic = false,
+    this.allowCopy = true,
     this.icon,
     this.suffix,
     this.extraLabel,
@@ -77,6 +79,7 @@ class AuthFormInput extends StatelessWidget {
                   controller: controller,
                   maxLines: maxLines,
                   obscureText: obscure,
+                  enableInteractiveSelection: allowCopy,
                   keyboardType: keyboardType,
                   inputFormatters: inputFormatters,
                   cursorColor: context.sanadText,

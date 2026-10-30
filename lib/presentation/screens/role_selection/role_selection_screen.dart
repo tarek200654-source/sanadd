@@ -30,7 +30,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   void _continue() {
     Navigator.pushNamed(
       context,
-      AppRoutes.login,
+      AppRoutes.signup,
       arguments: AuthRouteArguments(role: _selectedRole),
     );
   }

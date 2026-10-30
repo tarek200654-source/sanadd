@@ -99,7 +99,7 @@ abstract final class AppColor {
   static const Color loginShadow = Color(0x26000000);
   static const Color loginToastShadow = Color(0x42000000);
   static const Color loginToastSuccessBackground = Color(0xFF0F2A1A);
-  static const Color loginToastErrorBackground = Color(0xFF2A0F0F);
+  static const Color loginToastErrorBackground = Color(0xFF000000);
   static const Color loginErrorBackground = Color(0x1AFF0000);
   static const Color loginErrorBorder = Color(0x33FF0000);
 

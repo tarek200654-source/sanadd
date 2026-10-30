@@ -2,6 +2,7 @@
 abstract final class AppConstants {
   static const String appName = 'SANAD';
   static const String splashRoute = '/';
+  static const String onboardingCompletedPreferenceKey = 'onboarding_completed';
 
   // Wearable sensor identifiers shared with device and health data layers.
   static const String imuSensor = 'IMU';

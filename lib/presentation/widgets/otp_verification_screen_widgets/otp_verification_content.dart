@@ -16,9 +16,9 @@ class OtpVerificationContent extends StatelessWidget {
     required this.digitLabel,
     required this.onCodeChanged,
     required this.resendLabel,
+    required this.isArabic,
     required this.canResend,
     required this.onResend,
-    required this.statusText,
   });
 
   final String title;
@@ -31,9 +31,9 @@ class OtpVerificationContent extends StatelessWidget {
   final String Function(int index) digitLabel;
   final ValueChanged<String> onCodeChanged;
   final String resendLabel;
+  final bool isArabic;
   final bool canResend;
   final VoidCallback onResend;
-  final String statusText;
 
   @override
   Widget build(BuildContext context) {
@@ -112,19 +112,10 @@ class OtpVerificationContent extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Align(
-          alignment: AlignmentDirectional.centerEnd,
+          alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
           child: TextButton(
             onPressed: canResend ? onResend : null,
             child: Text(resendLabel),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Text(
-          statusText,
-          style: const TextStyle(
-            color: AppColor.otpStatusText,
-            fontSize: 13,
-            height: 1.45,
           ),
         ),
       ],

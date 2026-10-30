@@ -16,6 +16,9 @@ class FirestoreUserRepository implements UserRepository {
   CollectionReference<Map<String, dynamic>> get _usernames =>
       _firestore.collection('usernames');
 
+  CollectionReference<Map<String, dynamic>> get _emails =>
+      _firestore.collection('emails');
+
   @override
   Future<bool> isUsernameAvailable(String username) async {
     if (!UsernamePolicy.isValid(username)) {
@@ -27,6 +30,27 @@ class FirestoreUserRepository implements UserRepository {
       final reservation = await _usernames
           .doc(UsernamePolicy.canonicalize(username))
           .get();
+      return !reservation.exists;
+    } on FirebaseException catch (error, stackTrace) {
+      throw UserRepositoryException(
+        UserRepositoryFailureType.unavailable,
+        cause: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  @override
+  Future<bool> isEmailAvailable(String email) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail.isEmpty || normalizedEmail.length > 254 ||
+        !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(normalizedEmail)) {
+      throw const UserRepositoryException(
+        UserRepositoryFailureType.invalidData,
+      );
+    }
+    try {
+      final reservation = await _emails.doc(normalizedEmail).get();
       return !reservation.exists;
     } on FirebaseException catch (error, stackTrace) {
       throw UserRepositoryException(
@@ -54,13 +78,27 @@ class FirestoreUserRepository implements UserRepository {
       final reservationRef = _usernames.doc(
         UsernamePolicy.canonicalize(username),
       );
+      final email = user.email.trim().toLowerCase();
+      if (email.isEmpty || email.length > 254 ||
+          !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+        throw const UserRepositoryException(
+          UserRepositoryFailureType.invalidData,
+        );
+      }
+      final emailRef = _emails.doc(email);
       final userRef = _users.doc(user.uid);
       await _firestore.runTransaction((transaction) async {
         final reservation = await transaction.get(reservationRef);
+        final emailReservation = await transaction.get(emailRef);
         final existingUser = await transaction.get(userRef);
         if (reservation.exists) {
           throw const UserRepositoryException(
             UserRepositoryFailureType.usernameTaken,
+          );
+        }
+        if (emailReservation.exists) {
+          throw const UserRepositoryException(
+            UserRepositoryFailureType.emailTaken,
           );
         }
         if (existingUser.exists) {
@@ -70,6 +108,7 @@ class FirestoreUserRepository implements UserRepository {
         }
         transaction.set(userRef, data);
         transaction.set(reservationRef, {'reserved': true});
+        transaction.set(emailRef, {'reserved': true});
       });
     } on UserRepositoryException {
       rethrow;

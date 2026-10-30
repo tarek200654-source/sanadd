@@ -9,8 +9,10 @@ import '../../../application/auth/auth_service.dart';
 import '../../../application/auth/auth_service_exception.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_color.dart';
+import '../../../data/repositories/wexora_otp_repository.dart';
 import '../../../presentation/auth/auth_route_arguments.dart';
 import '../../../presentation/widgets/auth/sanad_auth_logo.dart';
+import '../../../presentation/screens/otp_verification_screen/otp_verification_screen.dart';
 import '../../../utils/routes.dart';
 import '../../widgets/login_screen_widgets/forgot_password_form.dart';
 import '../../widgets/login_screen_widgets/login_footer_links.dart';
@@ -22,12 +24,18 @@ import '../../widgets/login_screen_widgets/reset_password_form.dart';
 enum _AuthView { login, otpVerify, forgotPassword, resetNewPassword }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.arguments, this.authService});
+  const LoginScreen({
+    super.key,
+    required this.arguments,
+    this.authService,
+    this.otpRepository,
+  });
 
   static const routeName = '/login';
 
   final AuthRouteArguments arguments;
   final AuthService? authService;
+  final OtpVerificationRepository? otpRepository;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -45,6 +53,10 @@ class _LoginScreenState extends State<LoginScreen>
 
   OverlayEntry? _toastEntry;
   Timer? _toastTimer;
+  Timer? _loginCooldownTimer;
+  DateTime? _loginLockedUntil;
+  int _loginFailedAttempts = 0;
+  int _loginLockRemaining = 0;
 
   final _loginUsername = TextEditingController();
   final _loginPassword = TextEditingController();
@@ -121,6 +133,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _toastTimer?.cancel();
+    _loginCooldownTimer?.cancel();
     _toastEntry?.remove();
     _resendTimer?.cancel();
     _loginUsername.dispose();
@@ -231,6 +244,10 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _signIn() async {
     if (_loading) return;
+    if (_loginLockRemaining > 0) {
+      _showToast(_loginCooldownMessage(_loginLockRemaining), success: false);
+      return;
+    }
     final email = _loginUsername.text.trim();
     final validEmail = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email);
     if (!validEmail || _loginPassword.text.isEmpty) {
@@ -250,16 +267,65 @@ class _LoginScreenState extends State<LoginScreen>
       _error = null;
     });
     try {
-      await (widget.authService ?? AuthService.firebase()).signIn(
+      final authService = widget.authService ?? AuthService.firebase();
+      final user = await authService.signIn(
         email: email,
         password: _loginPassword.text,
       );
+      final phoneNumber = user.phoneNumber?.trim();
+      if (phoneNumber == null || phoneNumber.isEmpty) {
+        await authService.signOut();
+        if (mounted) {
+          _showToast(
+            _isArabic
+                ? 'لا يوجد رقم واتساب مرتبط بهذا الحساب. تواصل مع الدعم.'
+                : 'This account has no WhatsApp number. Contact support.',
+            success: false,
+          );
+        }
+        return;
+      }
+      // Do not leave a Firebase session active while the WhatsApp challenge
+      // is pending. Sign in again only after the OTP is verified.
+      await authService.signOut();
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+      _loginFailedAttempts = 0;
+      _loginCooldownTimer?.cancel();
+      _loginLockedUntil = null;
+      _loginLockRemaining = 0;
+      final otpArguments = AuthRouteArguments(
+        role: user.role,
+        email: email,
+        password: _loginPassword.text,
+        phoneNumber: phoneNumber,
+        isLoginVerification: true,
+      );
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          settings: RouteSettings(
+            name: AppRoutes.otpVerification,
+            arguments: otpArguments,
+          ),
+          builder: (_) => OtpVerificationScreen(
+            arguments: otpArguments,
+            repository: widget.otpRepository,
+            authService: authService,
+          ),
+        ),
+      );
     } on AuthFailure catch (error) {
       if (!mounted) return;
+      if (error.type == AuthFailureType.invalidCredentials) {
+        _loginFailedAttempts++;
+        if (_loginFailedAttempts >= 5) {
+          _startLoginCooldown();
+          _showToast(
+            _loginCooldownMessage(_loginLockRemaining),
+            success: false,
+          );
+          return;
+        }
+      }
       final message = switch (error.type) {
         AuthFailureType.invalidCredentials ||
         AuthFailureType.invalidEmail => context.l10n.authInvalidCredentials,
@@ -275,6 +341,33 @@ class _LoginScreenState extends State<LoginScreen>
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  void _startLoginCooldown() {
+    _loginCooldownTimer?.cancel();
+    _loginLockedUntil = DateTime.now().add(const Duration(seconds: 60));
+    setState(() => _loginLockRemaining = 60);
+    _loginCooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final remaining = _loginLockedUntil!.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
+        timer.cancel();
+        setState(() {
+          _loginLockRemaining = 0;
+          _loginFailedAttempts = 0;
+          _loginLockedUntil = null;
+        });
+        return;
+      }
+      setState(() => _loginLockRemaining = remaining);
+    });
+  }
+
+  String _loginCooldownMessage(int seconds) => _isArabic
+      ? 'محاولات كثيرة. حاول مرة أخرى بعد $seconds ثانية.'
+      : 'Too many attempts. Try again in $seconds seconds.';
 
   void _demoAction(String action, {String? email}) {
     if (_loading) return;
@@ -418,8 +511,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                                 onToggle: () => Navigator.pushNamed(
                                   context,
-                                  AppRoutes.signup,
-                                  arguments: widget.arguments,
+                                  AppRoutes.roleSelection,
                                 ),
                                 onForgot: () => _go(_AuthView.forgotPassword),
                                 onSubmit: _signIn,

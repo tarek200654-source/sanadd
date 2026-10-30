@@ -48,6 +48,7 @@ async function createAccount(uid, username = 'mona_1', values = profile(username
   const batch = writeBatch(db);
   batch.set(doc(db, `users/${uid}`), values);
   batch.set(doc(db, `usernames/${username.toLowerCase()}`), { reserved: true });
+  batch.set(doc(db, `emails/${values.email.toLowerCase()}`), { reserved: true });
   await batch.commit();
 }
 

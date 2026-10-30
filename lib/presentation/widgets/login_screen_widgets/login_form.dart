@@ -83,6 +83,7 @@ class LoginForm extends StatelessWidget {
                     label: isArabic ? 'كلمة المرور' : 'Password',
                     controller: password,
                     obscure: obscure,
+                    allowCopy: false,
                     isArabic: isArabic,
                     icon: Icons.password_rounded,
                     inputKey: const ValueKey('auth-password-field'),

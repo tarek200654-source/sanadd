@@ -28,9 +28,8 @@ class WexoraOtpRepository implements OtpVerificationRepository {
     : _httpClient = httpClient ?? HttpClient();
 
   static const _apiBaseUrl = 'https://wexora.pro/api/v1';
-  // Defaults keep local debug builds working without extra run arguments.
-  // Keep credentials out of source control and provide them via
-  // --dart-define-from-file=wexora.local.json for local builds.
+  // Temporary local-development setup. These values are included in the app
+  // build; never use this approach for a distributed release.
   static const _apiKey = String.fromEnvironment('WEXORA_API_KEY');
   static const _sessionId = String.fromEnvironment('WEXORA_SESSION_ID');
 
@@ -56,7 +55,6 @@ class WexoraOtpRepository implements OtpVerificationRepository {
     return OtpChallenge(
       id: challengeId,
       expiresAt: expiresAt,
-      deliveryStatus: OtpDeliveryStatus.fromWexora(data['delivery_status']),
     );
   }
 
@@ -186,9 +184,7 @@ class WexoraOtpRepository implements OtpVerificationRepository {
         requestId: requestId is String ? requestId : null,
       );
     }
-    // Wexora accepts creation requests with HTTP 202. Treat an unexpected 2xx
-    // status as a protocol error instead of masking it as a generic service
-    // outage later while parsing an incomplete response.
+    // Wexora accepts OTP creation requests with HTTP 202.
     if (uri.path.endsWith('/otp') && response.statusCode != 202) {
       throw WexoraOtpException(
         'unexpected-success-status',

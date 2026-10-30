@@ -1,8 +1,8 @@
 import '../../domain/models/user_role.dart';
 import '../../domain/models/registration_data.dart';
 
-/// Signup state carried between the form and the Wexora OTP screen.
-/// Password is kept only in memory until OTP verification completes.
+/// Auth state carried between an auth form and the Wexora OTP screen.
+/// Password is kept in memory only while the OTP flow is active.
 class AuthRouteArguments {
   const AuthRouteArguments({
     required this.role,
@@ -11,6 +11,7 @@ class AuthRouteArguments {
     this.name,
     this.password,
     this.registrationData,
+    this.isLoginVerification = false,
   });
 
   final UserRole role;
@@ -19,6 +20,7 @@ class AuthRouteArguments {
   final String? name;
   final String? password;
   final RegistrationData? registrationData;
+  final bool isLoginVerification;
 
   AuthRouteArguments copyWith({
     UserRole? role,
@@ -27,6 +29,7 @@ class AuthRouteArguments {
     String? name,
     String? password,
     RegistrationData? registrationData,
+    bool? isLoginVerification,
   }) {
     return AuthRouteArguments(
       role: role ?? this.role,
@@ -35,6 +38,7 @@ class AuthRouteArguments {
       name: name ?? this.name,
       password: password ?? this.password,
       registrationData: registrationData ?? this.registrationData,
+      isLoginVerification: isLoginVerification ?? this.isLoginVerification,
     );
   }
 }

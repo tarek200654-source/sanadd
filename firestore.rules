@@ -12,10 +12,20 @@ service cloud.firestore {
         && value.matches('^[A-Za-z0-9._]+$');
     }
 
+    function validEmail(value) {
+      return value is string
+        && value.size() >= 6
+        && value.size() <= 254
+        && value.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+    }
+
     function validNewProfile(uid) {
       let data = request.resource.data;
       let reservation = getAfter(
         /databases/$(database)/documents/usernames/$(data.username.lower())
+      );
+      let emailReservation = getAfter(
+        /databases/$(database)/documents/emails/$(data.email.lower())
       );
       return data.keys().hasAll([
           'name', 'email', 'role', 'username', 'firstName', 'lastName',
@@ -26,8 +36,8 @@ service cloud.firestore {
           'country', 'region', 'address', 'phoneNumber', 'createdAt'
         ])
         && data.name is string && data.name.size() > 0 && data.name.size() <= 161
-        && data.email is string && data.email.size() > 0 && data.email.size() <= 254
-        && data.email == request.auth.token.email
+        && validEmail(data.email)
+        && data.email.lower() == request.auth.token.email.lower()
         && data.role in ['patient', 'caregiver']
         && validUsername(data.username)
         && data.firstName is string && data.firstName.size() > 0 && data.firstName.size() <= 80
@@ -37,7 +47,8 @@ service cloud.firestore {
         && data.address is string && data.address.size() > 0 && data.address.size() <= 250
         && data.phoneNumber is string && data.phoneNumber.matches('^\\+[0-9]{7,15}$')
         && data.createdAt is timestamp
-        && reservation.data.reserved == true;
+        && reservation.data.reserved == true
+        && emailReservation.data.reserved == true;
     }
 
     match /users/{uid} {
@@ -48,8 +59,10 @@ service cloud.firestore {
         && validNewProfile(uid);
       allow update: if signedIn()
         && request.auth.uid == uid
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.username == resource.data.username;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'firstName', 'lastName', 'country', 'region', 'address',
+          'phoneNumber'
+        ]);
       allow delete: if false;
     }
 
@@ -62,6 +75,19 @@ service cloud.firestore {
         && request.resource.data.reserved == true
         && validUsername(usernameId)
         && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.username.lower() == usernameId;
+      allow update, delete: if false;
+    }
+
+    match /emails/{emailId} {
+      // Availability checks read one canonical email document; listing is denied.
+      allow get: if true;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['reserved'])
+        && request.resource.data.reserved == true
+        && validEmail(emailId)
+        && emailId == request.auth.token.email.lower()
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.email.lower() == emailId;
       allow update, delete: if false;
     }
   }

@@ -13,6 +13,8 @@ flutter run --dart-define-from-file=wexora.local.json
 ```
 
 The local credentials file is ignored by Git. Keep the Wexora API key private.
+For this temporary direct-to-Wexora setup, the credentials are compiled into
+the app; use it only for local development and do not distribute the build.
 
 هذا الملف يشرح شكل المشروع والـ Architecture الموجودة حاليًا في الكود، وليس Architecture مستقبلية أو مقترحة.
 

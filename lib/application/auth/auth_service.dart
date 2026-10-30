@@ -30,6 +30,9 @@ class AuthService {
   Future<bool> isUsernameAvailable(String username) =>
       _userRepository.isUsernameAvailable(username);
 
+  Future<bool> isEmailAvailable(String email) =>
+      _userRepository.isEmailAvailable(email);
+
   Future<AppUser> register(RegistrationData registration) async {
     final uid = await _authRepository.createAccount(
       email: registration.email.trim(),
@@ -67,6 +70,9 @@ class AuthService {
           error is UserRepositoryException &&
               error.type == UserRepositoryFailureType.usernameTaken
           ? AuthServiceFailureType.usernameTaken
+          : error is UserRepositoryException &&
+                error.type == UserRepositoryFailureType.emailTaken
+          ? AuthServiceFailureType.emailTaken
           : AuthServiceFailureType.profileCreationFailed;
       throw AuthServiceException(
         rollbackError == null
