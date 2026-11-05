@@ -301,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen>
         isLoginVerification: true,
       );
       Navigator.of(context).push(
-        MaterialPageRoute<void>(
+        AppRoutes.transition(
           settings: RouteSettings(
             name: AppRoutes.otpVerification,
             arguments: otpArguments,

@@ -51,50 +51,35 @@ class OtpVerificationContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          description,
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: '$description '),
+              TextSpan(text: whatsAppLabel),
+              const TextSpan(text: ' '),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    phoneNumber,
+                    style: const TextStyle(
+                      color: AppColor.otpText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
           style: const TextStyle(
             color: AppColor.otpSupportingText,
             fontSize: 16,
             height: 1.5,
           ),
         ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            const Icon(
-              Icons.chat_bubble_outline_rounded,
-              size: 21,
-              color: AppColor.otpText,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                whatsAppLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColor.otpSupportingText,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              phoneNumber,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textDirection: TextDirection.ltr,
-              style: const TextStyle(
-                color: AppColor.otpText,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 36),
+        const SizedBox(height: 32),
         Text(
           codeLabel,
           style: const TextStyle(

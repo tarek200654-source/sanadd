@@ -312,8 +312,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       child: OtpVerificationContent(
                         title: l10n.otpTitle,
                         description: isArabic
-                            ? 'أدخل الرمز المكوّن من 6 أرقام المرسل عبر واتساب.'
-                            : 'Enter the 6-digit code sent to you on WhatsApp.',
+                            ? 'أدخل الرمز المكوّن من 6 أرقام المرسل عبر'
+                            : 'Enter the 6-digit code sent to you on',
                         whatsAppLabel: isArabic ? 'واتساب' : 'WhatsApp',
                         phoneNumber: _maskedPhone(widget.arguments.phoneNumber),
                         codeLabel: l10n.otpCodeLabel,

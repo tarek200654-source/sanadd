@@ -12,5 +12,19 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+    let batteryChannel = FlutterMethodChannel(
+      name: "sanad/device",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    batteryChannel.setMethodCallHandler { call, result in
+      guard call.method == "getBatteryLevel" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      UIDevice.current.isBatteryMonitoringEnabled = true
+      let level = UIDevice.current.batteryLevel
+      result(level >= 0 ? Int(level * 100) : nil)
+    }
   }
 }

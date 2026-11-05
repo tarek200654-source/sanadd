@@ -50,7 +50,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Keep the original SANAD mark and its placement unchanged.
+                // Keep the Arabic SANAD mark in both language modes.
                 Center(
                   child: SizedBox(
                     width: (constraints.maxWidth * .34)
@@ -65,7 +65,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       child: Image.asset(
                         AppAssets.sanadLogo,
                         fit: BoxFit.contain,
-                        semanticLabel: 'SANAD logo',
+                        semanticLabel: context.l10n.sanadLogoLabel,
                       ),
                     ),
                   ),

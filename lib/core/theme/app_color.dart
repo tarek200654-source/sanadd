@@ -1,8 +1,28 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColor {
-  // SANAD's new visual language is built around a calm, clinical blue-gray
-  // canvas, charcoal actions, and a small mint status accent.
+  // Dark OLED Palette (Matching reference design style)
+  static const Color darkBg = Color(0xFF090A0F);
+  static const Color darkSurface = Color(0xFF12141C);
+  static const Color darkSurfaceCard = Color(0xFF181B26);
+  static const Color darkSurfaceCardAlt = Color(0xFF1E2230);
+  static const Color darkBorder = Color(0xFF272C3D);
+  static const Color darkTextPrimary = Color(0xFFFFFFFF);
+  static const Color darkTextSecondary = Color(0xFF9EA6BA);
+  static const Color darkTextMuted = Color(0xFF636D85);
+
+  // Vibrant OLED Accent Colors (From Reference Screenshots)
+  static const Color accentBlue = Color(0xFF3886FF);
+  static const Color accentTeal = Color(0xFF00C9A7);
+  static const Color accentCyan = Color(0xFF00D2FC);
+  static const Color accentGreen = Color(0xFF00E676);
+  static const Color accentYellow = Color(0xFFFFC400);
+  static const Color accentOrange = Color(0xFFFF6D00);
+  static const Color accentRed = Color(0xFFFF3D00);
+  static const Color accentPurple = Color(0xFFA855F7);
+  static const Color accentPink = Color(0xFFEC4899);
+
+  // SANAD's visual language
   static const Color primary = Color(0xFF212529);
   static const Color primaryDark = Color(0xFF111820);
   static const Color secondary = Color(0xFFE7F0F8);

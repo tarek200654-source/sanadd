@@ -21,55 +21,59 @@ abstract final class AppRoutes {
   static const String signup = SignUpScreen.routeName;
   static const String otpVerification = OtpVerificationScreen.routeName;
 
+  static Route<void> transition({
+    required RouteSettings settings,
+    required WidgetBuilder builder,
+  }) => _animatedPage(settings, builder);
+
+  static Route<void> _animatedPage(
+    RouteSettings settings,
+    WidgetBuilder builder,
+  ) => PageRouteBuilder<void>(
+    settings: settings,
+    transitionDuration: const Duration(milliseconds: 160),
+    reverseTransitionDuration: const Duration(milliseconds: 130),
+    pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final fade = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeInOutCubic,
+      );
+
+      return FadeTransition(opacity: fade, child: child);
+    },
+  );
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
       case null:
-        return MaterialPageRoute<void>(
-          builder: (_) => const SplashScreen(),
-          settings: settings,
-        );
+        return _animatedPage(settings, (_) => const SplashScreen());
       case language:
-        return MaterialPageRoute<void>(
-          builder: (_) => const LanguageScreen(),
-          settings: settings,
-        );
+        return _animatedPage(settings, (_) => const LanguageScreen());
       case home:
-        return MaterialPageRoute<void>(
-          builder: (_) => const HomeScreen(),
-          settings: settings,
-        );
+        return _animatedPage(settings, (_) => const HomeScreen());
       case onboarding:
-        return MaterialPageRoute<void>(
-          builder: (_) => const OnboardingScreen(),
-          settings: settings,
-        );
+        return _animatedPage(settings, (_) => const OnboardingScreen());
       case roleSelection:
-        return MaterialPageRoute<void>(
-          builder: (_) => const RoleSelectionScreen(),
-          settings: settings,
-        );
+        return _animatedPage(settings, (_) => const RoleSelectionScreen());
       case login:
-        return MaterialPageRoute<void>(
-          builder: (_) => LoginScreen(arguments: _authArguments(settings)),
-          settings: settings,
+        return _animatedPage(
+          settings,
+          (_) => LoginScreen(arguments: _authArguments(settings)),
         );
       case signup:
-        return MaterialPageRoute<void>(
-          builder: (_) => SignUpScreen(arguments: _authArguments(settings)),
-          settings: settings,
+        return _animatedPage(
+          settings,
+          (_) => SignUpScreen(arguments: _authArguments(settings)),
         );
       case otpVerification:
-        return MaterialPageRoute<void>(
-          builder: (_) =>
-              OtpVerificationScreen(arguments: _authArguments(settings)),
-          settings: settings,
+        return _animatedPage(
+          settings,
+          (_) => OtpVerificationScreen(arguments: _authArguments(settings)),
         );
       default:
-        return MaterialPageRoute<void>(
-          builder: (_) => const _UnknownRouteScreen(),
-          settings: settings,
-        );
+        return _animatedPage(settings, (_) => const _UnknownRouteScreen());
     }
   }
 

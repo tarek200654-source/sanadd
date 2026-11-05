@@ -4,12 +4,7 @@ import '../../../core/assets/app_assets.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_color.dart';
 
-/// The auth-header version of SANAD's existing mark.
-///
-/// The source image is a transparent 1024px square with its artwork centered
-/// inside it at X=[176, 844], Y=[402, 692] (width: 668, height: 290, ratio: 2.30).
-/// Sizing the image proportionally to an artwork width of ~92 logical px provides
-/// an elegant, medium-small mark that sits harmoniously in the auth header.
+/// The auth-header version of SANAD's Arabic brand mark.
 class SanadAuthLogo extends StatelessWidget {
   const SanadAuthLogo({super.key, this.artworkWidth = 92});
 

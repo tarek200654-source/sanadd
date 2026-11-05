@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/assets/app_assets.dart';
 import '../../../core/theme/app_color.dart';
 import '../../../core/localization/app_localizations.dart';
 
@@ -1322,6 +1323,7 @@ class _SensorCalloutPainter extends CustomPainter {
 /// Crop transparent padding only; the original logo pixels remain unchanged.
 class _OriginalBandLogo extends StatelessWidget {
   const _OriginalBandLogo();
+
   @override
   Widget build(BuildContext context) => SizedBox(
     key: const ValueKey('original-band-logo'),
@@ -1342,7 +1344,7 @@ class _OriginalBandLogo extends StatelessWidget {
                 BlendMode.srcIn,
               ),
               child: Image.asset(
-                'assets/images/sanad_logo.png',
+                AppAssets.sanadLogo,
                 fit: BoxFit.fill,
                 filterQuality: FilterQuality.high,
               ),

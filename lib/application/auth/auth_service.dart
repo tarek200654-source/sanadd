@@ -33,6 +33,13 @@ class AuthService {
   Future<bool> isEmailAvailable(String email) =>
       _userRepository.isEmailAvailable(email);
 
+  /// Reads dashboard data without changing the current authentication session.
+  Future<AppUser?> getCurrentUserProfile() async {
+    final uid = currentUserId;
+    if (uid == null || uid.isEmpty) return null;
+    return _userRepository.getUser(uid);
+  }
+
   Future<AppUser> register(RegistrationData registration) async {
     final uid = await _authRepository.createAccount(
       email: registration.email.trim(),
