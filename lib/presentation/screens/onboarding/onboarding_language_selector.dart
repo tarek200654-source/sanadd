@@ -4,7 +4,7 @@ import '../../../core/localization/locale_scope.dart';
 import '../../../core/theme/app_color.dart';
 
 class OnboardingLanguageSelector extends StatelessWidget {
-  const OnboardingLanguageSelector();
+  const OnboardingLanguageSelector({super.key});
 
   @override
   Widget build(BuildContext context) {

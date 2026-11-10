@@ -1,3 +1,5 @@
+import 'support/laravel_auth_fixture.dart';
+import 'package:sanad/application/auth/auth_scope.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,11 +10,18 @@ import 'package:sanad/main.dart';
 import 'package:sanad/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:sanad/presentation/screens/role_selection/role_selection_screen.dart';
 import 'package:sanad/presentation/screens/login_screen/login_screen.dart';
+import 'package:sanad/presentation/screens/signup_screen/signup_screen.dart';
+import 'package:sanad/core/constants/app_constants.dart';
 import 'package:sanad/domain/models/user_role.dart';
 import 'package:sanad/presentation/widgets/shared_widgets/sanad_button.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  late LaravelAuthFixture fixture;
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    fixture = LaravelAuthFixture();
+  });
+  tearDown(() => fixture.close());
 
   // The welcome watch animates continuously; advance finite transitions explicitly.
   Future<void> settle(WidgetTester tester) async {
@@ -27,9 +36,12 @@ void main() {
     LocaleController? controller,
   }) async {
     await tester.pumpWidget(
-      LocaleScope(
-        controller: controller ?? LocaleController(),
-        child: const SanadApp(),
+      AuthScope(
+        auth: fixture.auth,
+        child: LocaleScope(
+          controller: controller ?? LocaleController(),
+          child: const SanadApp(),
+        ),
       ),
     );
     await tester.pump();
@@ -139,7 +151,13 @@ void main() {
       await tester.tap(skip);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.byType(RoleSelectionScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(
+        (await SharedPreferences.getInstance()).getBool(
+          AppConstants.onboardingCompletedPreferenceKey,
+        ),
+        isTrue,
+      );
     },
   );
 
@@ -167,7 +185,7 @@ void main() {
   });
 
   testWidgets(
-    'Next traverses onboarding and continues through role selection',
+    'onboarding opens login and signup selects the registration role',
     (tester) async {
       await openOnboarding(tester);
       for (var page = 1; page < 5; page++) {
@@ -178,6 +196,10 @@ void main() {
       await tester.tap(find.text('Get Started'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(LoginScreen), findsOneWidget);
+      await tester.ensureVisible(find.text('Sign up'));
+      await tester.tap(find.text('Sign up'));
+      await settle(tester);
       expect(find.byType(RoleSelectionScreen), findsOneWidget);
       final caregiver = find.byKey(const ValueKey('role-option-caregiver'));
       await tester.ensureVisible(caregiver);
@@ -186,7 +208,7 @@ void main() {
       await tester.tap(find.text('Continue'));
       await settle(tester);
       expect(
-        tester.widget<LoginScreen>(find.byType(LoginScreen)).arguments.role,
+        tester.widget<SignUpScreen>(find.byType(SignUpScreen)).arguments.role,
         UserRole.caregiver,
       );
     },

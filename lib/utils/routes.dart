@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../domain/models/app_user.dart';
 import '../domain/models/user_role.dart';
 import '../presentation/auth/auth_route_arguments.dart';
 import '../presentation/screens/splash_screen/splash_screen.dart';
 import '../presentation/screens/home_screen/home_screen.dart';
+import '../presentation/screens/caregiver_links_screen/caregiver_links_screen.dart';
 import '../presentation/screens/language_screen/language_screen.dart';
 import '../presentation/screens/onboarding/onboarding_screen.dart';
 import '../presentation/screens/role_selection/role_selection_screen.dart';
@@ -15,33 +17,28 @@ abstract final class AppRoutes {
   static const String splash = SplashScreen.routeName;
   static const String language = LanguageScreen.routeName;
   static const String home = '/home';
+  static const String caregiverLinks = '/caregiver-links';
   static const String onboarding = OnboardingScreen.routeName;
   static const String roleSelection = RoleSelectionScreen.routeName;
   static const String login = LoginScreen.routeName;
   static const String signup = SignUpScreen.routeName;
   static const String otpVerification = OtpVerificationScreen.routeName;
 
-  static Route<void> transition({
+  static Route<T> transition<T>({
     required RouteSettings settings,
     required WidgetBuilder builder,
-  }) => _animatedPage(settings, builder);
+  }) => _animatedPage<T>(settings, builder);
 
-  static Route<void> _animatedPage(
+  static Route<T> _animatedPage<T>(
     RouteSettings settings,
     WidgetBuilder builder,
-  ) => PageRouteBuilder<void>(
+  ) => PageRouteBuilder<T>(
     settings: settings,
-    transitionDuration: const Duration(milliseconds: 160),
-    reverseTransitionDuration: const Duration(milliseconds: 130),
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
     pageBuilder: (context, animation, secondaryAnimation) => builder(context),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final fade = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeInOutCubic,
-      );
-
-      return FadeTransition(opacity: fade, child: child);
-    },
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        child,
   );
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -52,7 +49,16 @@ abstract final class AppRoutes {
       case language:
         return _animatedPage(settings, (_) => const LanguageScreen());
       case home:
-        return _animatedPage(settings, (_) => const HomeScreen());
+        return _animatedPage(
+          settings,
+          (_) => HomeScreen(
+            initialUser: settings.arguments is AppUser
+                ? settings.arguments! as AppUser
+                : null,
+          ),
+        );
+      case caregiverLinks:
+        return _animatedPage(settings, (_) => const CaregiverLinksScreen());
       case onboarding:
         return _animatedPage(settings, (_) => const OnboardingScreen());
       case roleSelection:

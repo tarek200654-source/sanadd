@@ -7,6 +7,7 @@ import 'role_mark.dart';
 
 class RoleChoice extends StatelessWidget {
   const RoleChoice({
+    super.key,
     required this.role,
     required this.title,
     required this.description,

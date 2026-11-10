@@ -174,9 +174,6 @@ class AppLocalizations {
   String get hidePasswordLabel =>
       isArabic ? 'إخفاء كلمة المرور' : 'Hide password';
   String get roleContextLabel => isArabic ? 'الدور المختار' : 'Selected role';
-  String get verificationPreviewNotice => isArabic
-      ? 'هذه معاينة لواجهة التحقق فقط؛ لم يتم إرسال رمز.'
-      : 'This is a verification UI preview; no code has been sent.';
   String get otpTitle =>
       isArabic ? 'أدخل رمز التحقق' : 'Enter verification code';
   String get otpSubtitle => isArabic
@@ -186,12 +183,6 @@ class AppLocalizations {
   String get otpIncompleteMessage => isArabic
       ? 'أدخل رمز التحقق المكوّن من 6 أرقام.'
       : 'Enter the 6-digit verification code.';
-  String get otpNotConnectedMessage => isArabic
-      ? 'سيتم ربط التحقق الحقيقي لاحقًا. لم يتم التحقق من الرمز.'
-      : 'Real verification will be connected later. The code was not verified.';
-  String get otpResendUnavailable => isArabic
-      ? 'إعادة الإرسال غير متاحة حتى يتم ربط مزود تحقق حقيقي.'
-      : 'Resend is unavailable until a real verification provider is connected.';
   String get otpSentMessage => isArabic
       ? 'تم طلب إرسال رمز التحقق عبر واتساب.'
       : 'WhatsApp code delivery has been requested.';

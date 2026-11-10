@@ -12,6 +12,7 @@ class LoginForm extends StatelessWidget {
   final int usernameShake, passwordShake;
   final VoidCallback onToggle, onForgot, onSubmit, onToggleObscure;
   const LoginForm({
+    super.key,
     required this.isArabic,
     required this.loading,
     required this.username,

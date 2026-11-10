@@ -1,13 +1,13 @@
 import 'package:sanad/application/auth/auth_service.dart';
 import 'package:sanad/domain/models/app_user.dart';
 import 'package:sanad/domain/models/user_role.dart';
-import 'package:sanad/domain/repositories/auth_repository.dart';
-import 'package:sanad/domain/repositories/user_repository.dart';
+import '../support/laravel_auth_fixture.dart';
 
-// Test-only account: no Firebase requests or credentials are used in UI checks.
+// Test-only profile fixture; never invokes a real provider.
 class DashboardTestAuth extends AuthService {
-  DashboardTestAuth()
-    : super(authRepository: _Auth(), userRepository: _Users());
+  DashboardTestAuth() : this._(LaravelAuthFixture());
+  DashboardTestAuth._(LaravelAuthFixture f)
+    : super(api: f.api, tokenStore: f.tokens);
   bool signedOut = false;
   @override
   Future<AppUser?> getCurrentUserProfile() async => const AppUser(
@@ -27,14 +27,4 @@ class DashboardTestAuth extends AuthService {
   Future<void> signOut() async {
     signedOut = true;
   }
-}
-
-class _Auth implements AuthRepository {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _Users implements UserRepository {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

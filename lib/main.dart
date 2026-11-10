@@ -1,8 +1,7 @@
+import 'application/auth/auth_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:firebase_core/firebase_core.dart';
 
-import 'firebase_options.dart';
 import 'core/constants/app_constants.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/localization/locale_controller.dart';
@@ -14,15 +13,17 @@ import 'utils/routes.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   final localeController = LocaleController();
 
   // Load the saved locale before rendering the app
   // to avoid showing the default language first.
   await localeController.load();
 
-  runApp(LocaleScope(controller: localeController, child: const SanadApp()));
+  runApp(
+    AuthScope(
+      child: LocaleScope(controller: localeController, child: const SanadApp()),
+    ),
+  );
 }
 
 class SanadApp extends StatelessWidget {

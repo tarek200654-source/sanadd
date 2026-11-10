@@ -18,7 +18,7 @@ void main() {
       phoneNumber: '+201012345678',
     );
 
-    final data = user.toFirestore();
+    final data = user.toMap();
 
     expect(data['username'], 'Ahmad_1');
     expect(data['firstName'], 'أحمد');

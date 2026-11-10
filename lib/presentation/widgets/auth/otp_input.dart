@@ -125,7 +125,10 @@ class _OtpInputState extends State<OtpInput> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      onChanged: widget.onChanged,
+                      onChanged: (value) {
+                        setState(() {});
+                        widget.onChanged(value);
+                      },
                     ),
                   ),
                 ],

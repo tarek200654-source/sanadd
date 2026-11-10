@@ -4,7 +4,7 @@ import '../shared_widgets/auth_screen_styles.dart';
 
 class LoginScreenSquaresLoading extends StatefulWidget {
   final Color? color;
-  const LoginScreenSquaresLoading({this.color});
+  const LoginScreenSquaresLoading({super.key, this.color});
   @override
   State<LoginScreenSquaresLoading> createState() =>
       _LoginScreenSquaresLoadingState();

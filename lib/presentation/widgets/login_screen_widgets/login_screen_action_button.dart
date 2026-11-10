@@ -18,7 +18,7 @@ class LoginScreenActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = isArabic ? GoogleFonts.tajawal : GoogleFonts.plusJakartaSans;
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 58,
       child: ElevatedButton(

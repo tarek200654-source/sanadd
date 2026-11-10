@@ -1,4 +1,4 @@
-/// Shared username constraints used by UI validation and Firestore paths.
+/// Shared username constraints used by UI validation and normalized identity checks.
 abstract final class UsernamePolicy {
   static const int minLength = 4;
   static const int maxLength = 15;

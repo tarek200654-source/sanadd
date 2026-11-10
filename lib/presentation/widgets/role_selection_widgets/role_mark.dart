@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../domain/models/user_role.dart';
 
 class RoleMark extends StatelessWidget {
-  const RoleMark({required this.role, required this.color});
+  const RoleMark({super.key, required this.role, required this.color});
 
   final UserRole role;
   final Color color;

@@ -2,6 +2,24 @@
 
 Context-aware medical wearable and caregiving platform built with Flutter.
 
+## Development SDK and checks
+
+Use Flutter **3.41.6 stable** with Dart **3.11.4**. The version is recorded in
+`.fvmrc` for FVM users. With a regular Flutter installation, ensure
+`flutter --version` reports these versions and select that same SDK in your IDE.
+Keep `pubspec.lock` committed; use `flutter pub get`, rather than `pub upgrade`,
+when setting up the project.
+
+```sh
+flutter pub get --enforce-lockfile
+flutter analyze
+flutter test
+flutter build apk --debug
+```
+
+Firestore rules tests require Java 21 or later. From
+`tooling/firestore-rules-tests`, run `npm ci` and `npm run emulator:test`.
+
 ## Local Wexora OTP credentials
 
 Wexora OTP credentials are intentionally not committed. Copy

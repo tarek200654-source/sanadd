@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../application/auth/auth_service.dart';
+import '../../../application/auth/auth_scope.dart';
+import '../../auth/api_error_message.dart';
+import '../../../data/network/api_exception.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_color.dart';
 import '../../../domain/models/registration_data.dart';
-import '../../../domain/repositories/user_repository.dart';
+
 import '../../../presentation/auth/auth_route_arguments.dart';
 import '../../../presentation/auth/validation/auth_validators.dart';
 import '../../../presentation/widgets/shared_widgets/auth_screen_styles.dart';
@@ -31,6 +34,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen>
     with TickerProviderStateMixin {
   int _step = 0;
+  bool _submitting = false;
   bool _isArabic = false;
   bool _localeInitialized = false;
   bool _obscurePassword = true;
@@ -157,7 +161,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     _usernameDebounce = Timer(const Duration(milliseconds: 450), () async {
       if (!mounted || _username.text.trim() != value) return;
       try {
-        final available = await (widget.authService ?? AuthService.firebase())
+        final available = await (widget.authService ?? AuthScope.read(context))
             .isUsernameAvailable(value);
         if (!mounted || _username.text.trim() != value) return;
         setState(() {
@@ -170,10 +174,6 @@ class _SignUpScreenState extends State<SignUpScreen>
         });
       } catch (error) {
         if (!mounted || _username.text.trim() != value) return;
-        final diagnostic = error is UserRepositoryException
-            ? '${error.code}: ${error.cause ?? error}'
-            : error;
-        debugPrint('Username availability check failed: $diagnostic');
         setState(() {
           _checkingUsername = false;
           _usernameError = true;
@@ -201,7 +201,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     _emailDebounce = Timer(const Duration(milliseconds: 450), () async {
       if (!mounted || _email.text.trim() != value) return;
       try {
-        final available = await (widget.authService ?? AuthService.firebase())
+        final available = await (widget.authService ?? AuthScope.read(context))
             .isEmailAvailable(value);
         if (!mounted || _email.text.trim() != value) return;
         setState(() {
@@ -217,13 +217,6 @@ class _SignUpScreenState extends State<SignUpScreen>
         });
       } catch (error) {
         if (!mounted || _email.text.trim() != value) return;
-        final diagnostic = error is UserRepositoryException
-            ? '${error.code}: ${error.cause ?? error}'
-            : error;
-        debugPrint(
-          'Email availability check failed for ${value.toLowerCase()}: '
-          '$diagnostic',
-        );
         setState(() {
           _checkingEmail = false;
           _checkedEmail = value;
@@ -311,6 +304,7 @@ class _SignUpScreenState extends State<SignUpScreen>
   }
 
   void _nextStep() {
+    if (_submitting) return;
     if (_step == 0 && AuthValidators.validateEmail(_email.text) != null) {
       setState(() {
         _emailError = true;
@@ -337,6 +331,7 @@ class _SignUpScreenState extends State<SignUpScreen>
   }
 
   void _previousStep() {
+    if (_submitting) return;
     if (_step > 0) {
       FocusScope.of(context).unfocus();
       setState(() => _step--);
@@ -345,7 +340,8 @@ class _SignUpScreenState extends State<SignUpScreen>
     _returnToLogin();
   }
 
-  void _submitRegistration() {
+  Future<void> _submitRegistration() async {
+    if (_submitting) return;
     final registration = RegistrationData(
       username: _username.text.trim(),
       firstName: _firstName.text.trim(),
@@ -358,17 +354,57 @@ class _SignUpScreenState extends State<SignUpScreen>
       address: _address.text.trim(),
       phoneNumber: AuthValidators.normalizedPhone(_countryCode, _phone.text),
     );
-    Navigator.pushNamed(
-      context,
-      AppRoutes.otpVerification,
-      arguments: widget.arguments.copyWith(
-        email: registration.email,
-        name: registration.fullName,
-        password: registration.password,
-        phoneNumber: registration.phoneNumber,
-        registrationData: registration,
-      ),
-    );
+    setState(() => _submitting = true);
+    try {
+      final auth = widget.authService ?? AuthScope.read(context);
+      await auth.startSignup(
+        registration,
+        passwordConfirmation: _confirmation.text,
+        language: _isArabic ? 'ar' : 'en',
+      );
+      if (!mounted) return;
+      _password.clear();
+      _confirmation.clear();
+      final result = await Navigator.pushNamed(
+        context,
+        AppRoutes.otpVerification,
+        arguments: AuthRouteArguments(
+          role: registration.role,
+          email: registration.email,
+          phoneNumber: registration.phoneNumber,
+        ),
+      );
+      if (!mounted) return;
+      if (result is String) {
+        _step = result == 'username-taken' ? 1 : 0;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              apiErrorMessage(context.l10n, ApiException(code: result)),
+            ),
+          ),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      if (error is ApiException && error.fieldCodes.isNotEmpty) {
+        final field = error.fieldCodes.keys.first;
+        _step = switch (field) {
+          'email' => 0,
+          'username' => 1,
+          'first_name' || 'last_name' => 2,
+          'password' || 'password_confirmation' => 3,
+          'phone_number' => 4,
+          'country' || 'region' => 5,
+          _ => 6,
+        };
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(apiErrorMessage(context.l10n, error))),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   void _returnToLogin() {
@@ -423,51 +459,55 @@ class _SignUpScreenState extends State<SignUpScreen>
                         Expanded(
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 450),
-                            child: SignupStepsForm(
-                              regStep: _step,
-                              isArabic: _isArabic,
-                              first: _firstName,
-                              last: _lastName,
-                              username: _username,
-                              email: _email,
-                              phone: _phone,
-                              address: _address,
-                              password: _password,
-                              confirm: _confirmation,
-                              selectedGov: _governorate,
-                              selectedCountry: _country,
-                              selectedCountryCode: _countryCode,
-                              expectedPhoneLength: _nationalNumberLength,
-                              onStepNext: _nextStep,
-                              onStepBack: _previousStep,
-                              onToggleObscure: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
+                            child: AbsorbPointer(
+                              absorbing: _submitting,
+                              child: SignupStepsForm(
+                                regStep: _step,
+                                isArabic: _isArabic,
+                                first: _firstName,
+                                last: _lastName,
+                                username: _username,
+                                email: _email,
+                                phone: _phone,
+                                address: _address,
+                                password: _password,
+                                confirm: _confirmation,
+                                selectedGov: _governorate,
+                                selectedCountry: _country,
+                                selectedCountryCode: _countryCode,
+                                expectedPhoneLength: _nationalNumberLength,
+                                onStepNext: _nextStep,
+                                onStepBack: _previousStep,
+                                onToggleObscure: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                                onToggleConfirm: () => setState(
+                                  () => _obscureConfirmation =
+                                      !_obscureConfirmation,
+                                ),
+                                onGovTap: _showGovernoratePicker,
+                                onCountryTap: _showCountryPicker,
+                                onCountryCodeTap: _showCountryCodePicker,
+                                usernameError: _usernameError,
+                                emailError: _emailError,
+                                usernameChecking: _checkingUsername,
+                                emailChecking: _checkingEmail,
+                                usernameHint: _usernameHint,
+                                emailHint: _emailHint,
+                                usernameTaken: _usernameTaken,
+                                emailInvalid: _emailInvalid,
+                                obscure: _obscurePassword,
+                                obscureConfirm: _obscureConfirmation,
+                                hasUpper: _hasUppercase,
+                                hasNum: _hasNumber,
+                                hasSpec: _hasSpecial,
+                                hasMinLen: _hasMinimumLength,
+                                passMatch: _passwordsMatch,
                               ),
-                              onToggleConfirm: () => setState(
-                                () => _obscureConfirmation =
-                                    !_obscureConfirmation,
-                              ),
-                              onGovTap: _showGovernoratePicker,
-                              onCountryTap: _showCountryPicker,
-                              onCountryCodeTap: _showCountryCodePicker,
-                              usernameError: _usernameError,
-                              emailError: _emailError,
-                              usernameChecking: _checkingUsername,
-                              emailChecking: _checkingEmail,
-                              usernameHint: _usernameHint,
-                              emailHint: _emailHint,
-                              usernameTaken: _usernameTaken,
-                              emailInvalid: _emailInvalid,
-                              obscure: _obscurePassword,
-                              obscureConfirm: _obscureConfirmation,
-                              hasUpper: _hasUppercase,
-                              hasNum: _hasNumber,
-                              hasSpec: _hasSpecial,
-                              hasMinLen: _hasMinimumLength,
-                              passMatch: _passwordsMatch,
                             ),
                           ),
                         ),
+                        if (_submitting) const LinearProgressIndicator(),
                       ],
                     ),
                   ),

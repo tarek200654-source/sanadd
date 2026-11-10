@@ -19,6 +19,7 @@ class ResetPasswordForm extends StatelessWidget {
   final TextEditingController pass, confirm;
   final VoidCallback onBack, onSubmit, onToggleObscure, onToggleConfirm;
   const ResetPasswordForm({
+    super.key,
     required this.isArabic,
     required this.loading,
     required this.pass,

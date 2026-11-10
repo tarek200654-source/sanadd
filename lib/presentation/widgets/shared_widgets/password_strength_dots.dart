@@ -5,7 +5,7 @@ import 'auth_screen_styles.dart';
 
 class PasswordStrengthDots extends StatelessWidget {
   final List<bool> status;
-  const PasswordStrengthDots({required this.status});
+  const PasswordStrengthDots({super.key, required this.status});
   @override
   Widget build(BuildContext context) {
     int metCount = status.where((e) => e).length;

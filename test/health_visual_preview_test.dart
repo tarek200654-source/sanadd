@@ -60,22 +60,30 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 150)),
       );
-      await tester.pumpAndSettle();
-      for (var tab = 0; tab < 4; tab++) {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      for (var tab = 0; tab < 5; tab++) {
         if (tab > 0) {
-          final labels = language == 'ar'
-              ? ['اليوم', 'النشاط', 'الصحة', 'الاتجاهات']
-              : ['Today', 'Activity', 'Health', 'Insights'];
-          await tester.tap(find.text(labels[tab]).last);
-          await tester.pumpAndSettle();
+          const destinations = [
+            'home',
+            'activity',
+            'health',
+            'insights',
+            'profile',
+          ];
+          await tester.tap(find.byKey(ValueKey('nav-${destinations[tab]}')));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
           await tester.runAsync(
             () => Future<void>.delayed(const Duration(milliseconds: 150)),
           );
-          await tester.pumpAndSettle();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
         }
         expect(tester.takeException(), isNull);
         final boundary =

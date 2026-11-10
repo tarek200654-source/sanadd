@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -233,7 +232,7 @@ void main() {
     expect(find.bySemanticsLabel('SANAD logo'), findsOneWidget);
   });
 
-  testWidgets('OTP input preserves corrections and moves backward on delete', (
+  testWidgets('OTP input displays entered digits, corrections, and deletion', (
     tester,
   ) async {
     final values = <String>[];
@@ -241,24 +240,28 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pumpAndSettle();
 
-    expect(find.byType(EditableText), findsNWidgets(6));
-    await tester.tap(find.byKey(const ValueKey('otp-input-0')));
-    await tester.enterText(find.byKey(const ValueKey('otp-input-0')), '123456');
+    final input = find.byKey(const ValueKey('otp-code-field'));
+    await tester.tap(input);
+    await tester.enterText(input, '123456');
     await tester.pump();
     expect(values.last, '123456');
     expect(find.text('1'), findsOneWidget);
     expect(find.text('6'), findsOneWidget);
 
-    await tester.enterText(find.byKey(const ValueKey('otp-input-0')), '19');
+    await tester.enterText(input, '923456');
     await tester.pump();
     expect(values.last, '923456');
 
-    await tester.enterText(find.byKey(const ValueKey('otp-input-5')), '');
-    await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('otp-input-5')));
-    await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+    await tester.enterText(input, '9234');
     await tester.pump();
     expect(values.last, '9234');
+    expect(find.text('4'), findsOneWidget);
+    expect(find.text('5'), findsNothing);
+    expect(find.text('6'), findsNothing);
+    await tester.enterText(input, '');
+    await tester.pump();
+    expect(values.last, '');
+    expect(find.text('•'), findsNWidgets(6));
   });
 
   testWidgets('auth button honors compact accessible height', (tester) async {
@@ -387,12 +390,33 @@ void main() {
     await tester.pumpWidget(app(const OtpInput(onChanged: _ignoreCode)));
     await tester.pumpAndSettle();
 
-    for (var index = 0; index < 6; index++) {
-      final cell = tester.getRect(find.byKey(ValueKey('otp-cell-$index')));
+    final input = find.byKey(const ValueKey('otp-code-field'));
+    await tester.enterText(input, '123456');
+    await tester.pump();
+    for (final digit in ['1', '2', '3', '4', '5', '6']) {
+      final cell = tester.getRect(find.text(digit));
       expect(cell.left, greaterThanOrEqualTo(0));
       expect(cell.right, lessThanOrEqualTo(size.width));
     }
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('OTP filters non-digits and limits pasted input to six digits', (
+    tester,
+  ) async {
+    final values = <String>[];
+    await tester.pumpWidget(app(OtpInput(onChanged: values.add)));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('otp-code-field')),
+      '12a34 5678',
+    );
+    await tester.pump();
+    expect(values.last, '123456');
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).controller.text,
+      '123456',
+    );
   });
 }
 

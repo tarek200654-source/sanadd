@@ -38,13 +38,6 @@ class AppUser {
       _hasValue(address) &&
       _hasValue(phoneNumber);
 
-  factory AppUser.fromFirestore({
-    required String uid,
-    required Map<String, dynamic> data,
-  }) {
-    return AppUser.fromMap(uid, data);
-  }
-
   factory AppUser.fromMap(String uid, Map<String, dynamic> data) {
     final normalizedUid = _requiredString(uid, 'uid');
     final name = _requiredString(data['name'], 'name');
@@ -76,7 +69,7 @@ class AppUser {
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toMap() {
     final data = <String, dynamic>{
       'name': name,
       'email': email,

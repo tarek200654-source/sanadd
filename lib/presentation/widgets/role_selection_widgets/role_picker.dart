@@ -5,6 +5,7 @@ import 'role_choice.dart';
 
 class RolePicker extends StatelessWidget {
   const RolePicker({
+    super.key,
     required this.patientTitle,
     required this.patientDescription,
     required this.caregiverTitle,

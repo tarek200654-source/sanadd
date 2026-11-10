@@ -1,72 +1,61 @@
+import '../support/laravel_auth_fixture.dart';
+import 'package:sanad/presentation/screens/home_screen/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:sanad/core/localization/app_localizations.dart';
-import 'package:sanad/core/theme/app_color.dart';
-import 'package:sanad/data/repositories/wexora_otp_repository.dart';
 import 'package:sanad/domain/models/user_role.dart';
 import 'package:sanad/presentation/auth/auth_route_arguments.dart';
 import 'package:sanad/presentation/screens/otp_verification_screen/otp_verification_screen.dart';
-import 'package:sanad/utils/routes.dart';
 
 void main() {
-  final repository = _FakeOtpRepository();
+  late LaravelAuthFixture fixture;
+  setUp(() => fixture = LaravelAuthFixture());
+  tearDown(() => fixture.close());
   Widget app(Widget home, {Locale locale = const Locale('en')}) {
-    return MaterialApp(
-      locale: locale,
-      theme: AppColor.theme(isArabic: locale.languageCode == 'ar'),
-      localizationsDelegates: const [
-        AppLocalizationsDelegate(),
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      onGenerateRoute: AppRoutes.onGenerateRoute,
-      home: home,
-      builder: (context, child) => Directionality(
-        textDirection: locale.languageCode == 'ar'
-            ? TextDirection.rtl
-            : TextDirection.ltr,
-        child: child ?? const SizedBox.shrink(),
-      ),
-    );
+    return fixture.app(home, language: locale.languageCode);
   }
 
   Future<void> pumpOtp(
     WidgetTester tester, {
     Locale locale = const Locale('en'),
+    String phoneNumber = '+201012345678',
   }) async {
+    await fixture.auth.startLogin(
+      email: 'amina@example.com',
+      password: 'ValidPass1!',
+      language: locale.languageCode,
+    );
     await tester.pumpWidget(
       app(
         OtpVerificationScreen(
-          arguments: const AuthRouteArguments(
+          arguments: AuthRouteArguments(
             role: UserRole.patient,
-            phoneNumber: '+201012345678',
+            isLoginVerification: true,
+            phoneNumber: phoneNumber,
           ),
-          repository: repository,
         ),
         locale: locale,
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1100));
+    await tester.pump(const Duration(milliseconds: 300));
   }
 
   testWidgets('OTP screen shows WhatsApp and hides email', (tester) async {
     await pumpOtp(tester);
-    expect(find.text('WhatsApp'), findsOneWidget);
-    expect(find.text('+••••••5678'), findsOneWidget);
+    expect(find.textContaining('WhatsApp', findRichText: true), findsOneWidget);
+    expect(find.text('+20 •••••• 5678'), findsOneWidget);
     expect(find.textContaining('@'), findsNothing);
   });
 
   testWidgets('Arabic OTP keeps phone and digit entry LTR', (tester) async {
     await pumpOtp(tester, locale: const Locale('ar'));
-    final phone = find.text('+••••••5678');
-    expect(tester.widget<Text>(phone).textDirection, TextDirection.ltr);
+    final phone = find.text('+20 •••••• 5678');
+    expect(Directionality.of(tester.element(phone)), TextDirection.ltr);
 
     final firstDigit = find.descendant(
-      of: find.byKey(const ValueKey('otp-input-0')),
+      of: find.byKey(const ValueKey('otp-code-field')),
       matching: find.byType(EditableText),
     );
     expect(
@@ -75,7 +64,27 @@ void main() {
     );
   });
 
-  testWidgets('OTP requires six digits and accepts a verified Wexora code', (
+  for (final callingCode in [
+    '+20',
+    '+966',
+    '+971',
+    '+965',
+    '+974',
+    '+968',
+    '+973',
+    '+962',
+    '+1',
+    '+44',
+  ]) {
+    testWidgets('OTP masks national digits for $callingCode', (tester) async {
+      await pumpOtp(tester, phoneNumber: '${callingCode}1234567890');
+      expect(find.text('$callingCode •••••• 7890'), findsOneWidget);
+      expect(find.text('${callingCode}1234567890'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  testWidgets('OTP requires six digits and accepts a server-verified code', (
     tester,
   ) async {
     await pumpOtp(tester);
@@ -83,12 +92,16 @@ void main() {
     await tester.pump();
     expect(find.text('Enter the 6-digit verification code.'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('otp-input-0')));
-    await tester.enterText(find.byKey(const ValueKey('otp-input-0')), '123456');
+    await tester.tap(find.byKey(const ValueKey('otp-code-field')));
+    await tester.enterText(
+      find.byKey(const ValueKey('otp-code-field')),
+      '123456',
+    );
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('otp-verify-submit')));
     await tester.pump();
-    expect(find.text('Verified successfully'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('OTP action stays visible on a short device', (tester) async {
@@ -104,21 +117,4 @@ void main() {
     expect(action.bottom, lessThanOrEqualTo(size.height));
     expect(tester.takeException(), isNull);
   });
-}
-
-class _FakeOtpRepository implements OtpVerificationRepository {
-  @override
-  Future<OtpChallenge> sendCode({
-    required String phoneNumber,
-    required String language,
-  }) async => OtpChallenge(
-    id: 'otp-challenge-12345',
-    expiresAt: DateTime.now().add(const Duration(minutes: 5)),
-  );
-
-  @override
-  Future<bool> verifyCode({
-    required String challengeId,
-    required String code,
-  }) async => code == '123456';
 }

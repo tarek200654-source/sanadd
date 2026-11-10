@@ -1,191 +1,87 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sanad/application/auth/auth_service.dart';
-import 'package:sanad/application/auth/auth_failure.dart';
-import 'package:sanad/application/auth/auth_service_exception.dart';
-import 'package:sanad/domain/models/app_user.dart';
-import 'package:sanad/domain/models/registration_data.dart';
-import 'package:sanad/domain/models/user_role.dart';
-import 'package:sanad/domain/repositories/auth_repository.dart';
-import 'package:sanad/domain/repositories/user_repository.dart';
+import 'package:http/http.dart' as http;
+import 'package:sanad/data/network/api_exception.dart';
+import 'package:sanad/domain/models/sanctum_token.dart';
+import '../../support/laravel_auth_fixture.dart';
 
 void main() {
-  late _FakeAuthRepository auth;
-  late _FakeUserRepository users;
-  late AuthService service;
-
-  const registration = RegistrationData(
-    username: 'patient_1',
-    firstName: 'سارة',
-    lastName: 'أحمد',
-    email: 'sara@example.com',
-    password: r"a' OR 1=1 --A1!",
-    role: UserRole.patient,
-    country: 'مصر',
-    region: 'القاهرة',
-    address: 'شارع 1',
-    phoneNumber: '+201012345678',
-  );
-
-  setUp(() {
-    auth = _FakeAuthRepository();
-    users = _FakeUserRepository();
-    service = AuthService(authRepository: auth, userRepository: users);
+  TestWidgetsFlutterBinding.ensureInitialized();
+  late LaravelAuthFixture f;
+  setUp(() => f = LaravelAuthFixture());
+  tearDown(() => f.close());
+  test('incomplete server profile cannot restore authentication', () async {
+    await f.tokens.save(
+      SanctumToken(
+        value: 'test-token',
+        expiresAt: DateTime.now().add(const Duration(days: 1)),
+      ),
+    );
+    f.override = (_) => Future.value(
+      f.response('user-retrieved', {
+        'user': {...f.user, 'phone_number': null},
+      }),
+    );
+    await expectLater(
+      f.auth.restoreCurrentUser(),
+      throwsA(isA<ApiException>()),
+    );
+    expect(f.auth.currentUser, isNull);
+    expect(await f.tokens.read(), isNotNull);
   });
-
   test(
-    'register creates auth credentials and the complete password-free profile',
+    'unknown role or malformed profile never grants an authenticated session',
     () async {
-      final user = await service.register(registration);
-
-      expect(auth.createdEmail, registration.email);
-      expect(auth.createdPassword, registration.password);
-      expect(user.username, registration.username);
-      expect(user.firstName, registration.firstName);
-      expect(users.created!.toFirestore().containsKey('password'), isFalse);
+      await f.tokens.save(
+        SanctumToken(
+          value: 'test-token',
+          expiresAt: DateTime.now().add(const Duration(days: 1)),
+        ),
+      );
+      for (final profile in [
+        {...f.user, 'role': 'admin'},
+        <String, dynamic>{},
+      ]) {
+        f.override = (_) =>
+            Future.value(f.response('user-retrieved', {'user': profile}));
+        await expectLater(
+          f.auth.restoreCurrentUser(),
+          throwsA(isA<ApiException>()),
+        );
+        expect(f.auth.currentUser, isNull);
+      }
     },
   );
-
   test(
-    'profile creation failure deletes the newly created auth account',
+    'malformed preparation response never becomes a pending login',
     () async {
-      users.createError = const UserRepositoryException(
-        UserRepositoryFailureType.usernameTaken,
+      f.override = (_) => Future.value(
+        http.Response(
+          jsonEncode({
+            'code': 'login-prepared',
+            'data': {'authenticated': false},
+          }),
+          200,
+        ),
       );
-
       await expectLater(
-        service.register(registration),
-        throwsA(
-          isA<AuthServiceException>().having(
-            (error) => error.type,
-            'type',
-            AuthServiceFailureType.usernameTaken,
-          ),
+        f.auth.startLogin(
+          email: 'amina@example.com',
+          password: 'ValidPass1!',
+          language: 'en',
         ),
+        throwsA(isA<ApiException>()),
       );
-      expect(auth.deleted, isTrue);
+      expect(await f.tokens.read(), isNull);
+      expect(f.auth.login.pendingAttempt, isNull);
     },
   );
-
-  test('login with missing profile signs out', () async {
-    users.profile = null;
-
-    await expectLater(
-      service.signIn(
-        email: 'sara@example.com',
-        password: registration.password,
-      ),
-      throwsA(isA<AuthServiceException>()),
+  test('an expired saved token cannot fetch protected data', () async {
+    f.tokens.value = SanctumToken(
+      value: 'expired-token',
+      expiresAt: DateTime.now().subtract(const Duration(seconds: 1)),
     );
-    expect(auth.signedOut, isTrue);
+    expect(await f.auth.restoreCurrentUser(), isNull);
+    expect(f.requests, isEmpty);
   });
-
-  test('login propagates safe Firebase authentication failures', () async {
-    auth.signInError = const AuthFailure(AuthFailureType.network);
-
-    await expectLater(
-      service.signIn(
-        email: 'sara@example.com',
-        password: registration.password,
-      ),
-      throwsA(
-        isA<AuthFailure>().having(
-          (error) => error.type,
-          'type',
-          AuthFailureType.network,
-        ),
-      ),
-    );
-  });
-
-  test('session restoration signs out an incomplete profile', () async {
-    users.profile = const AppUser(
-      uid: 'uid-1',
-      name: 'سارة أحمد',
-      email: 'sara@example.com',
-      role: UserRole.patient,
-    );
-
-    expect(await service.restoreCurrentUser(), isNull);
-    expect(auth.signedOut, isTrue);
-  });
-
-  test('session restoration returns the current profile', () async {
-    users.profile = _profile();
-
-    expect((await service.restoreCurrentUser())?.uid, 'uid-1');
-  });
-}
-
-AppUser _profile() => const AppUser(
-  uid: 'uid-1',
-  name: 'سارة أحمد',
-  email: 'sara@example.com',
-  role: UserRole.patient,
-  username: 'patient_1',
-  firstName: 'سارة',
-  lastName: 'أحمد',
-  country: 'مصر',
-  region: 'القاهرة',
-  address: 'شارع 1',
-  phoneNumber: '+201012345678',
-);
-
-class _FakeAuthRepository implements AuthRepository {
-  String? createdEmail;
-  String? createdPassword;
-  bool deleted = false;
-  bool signedOut = false;
-  Object? signInError;
-
-  @override
-  String? get currentUserId => 'uid-1';
-
-  @override
-  Stream<String?> authStateChanges() => const Stream.empty();
-
-  @override
-  Future<String> createAccount({
-    required String email,
-    required String password,
-  }) async {
-    createdEmail = email;
-    createdPassword = password;
-    return 'uid-1';
-  }
-
-  @override
-  Future<String> signIn({
-    required String email,
-    required String password,
-  }) async {
-    if (signInError != null) throw signInError!;
-    return 'uid-1';
-  }
-
-  @override
-  Future<void> signOut() async => signedOut = true;
-
-  @override
-  Future<void> deleteCurrentAccount() async => deleted = true;
-}
-
-class _FakeUserRepository implements UserRepository {
-  AppUser? profile = _profile();
-  AppUser? created;
-  Object? createError;
-
-  @override
-  Future<void> createUser(AppUser user) async {
-    if (createError != null) throw createError!;
-    created = user;
-  }
-
-  @override
-  Future<AppUser?> getUser(String uid) async => profile;
-
-  @override
-  Future<bool> isUsernameAvailable(String username) async => true;
-
-  @override
-  Future<bool> isEmailAvailable(String email) async => true;
 }

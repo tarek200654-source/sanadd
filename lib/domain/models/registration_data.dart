@@ -1,7 +1,7 @@
 import 'user_role.dart';
 
 /// Account fields collected by the existing multi-step registration flow.
-/// Password remains in memory only until Firebase Authentication accepts it.
+/// Password remains in memory only until the backend accepts the registration attempt.
 class RegistrationData {
   const RegistrationData({
     required this.username,

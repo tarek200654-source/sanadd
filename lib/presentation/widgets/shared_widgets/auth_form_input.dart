@@ -20,6 +20,7 @@ class AuthFormInput extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
   const AuthFormInput({
+    super.key,
     this.inputKey,
     required this.label,
     required this.controller,
@@ -57,7 +58,7 @@ class AuthFormInput extends StatelessWidget {
                   color: context.sanadInputLabel,
                 ),
               ),
-              if (extraLabel != null) extraLabel!,
+              ?extraLabel,
             ],
           ),
         ),
@@ -72,7 +73,7 @@ class AuthFormInput extends StatelessWidget {
           ),
           child: Row(
             children: [
-              if (prefix != null) prefix!,
+              ?prefix,
               Expanded(
                 child: TextField(
                   key: inputKey,

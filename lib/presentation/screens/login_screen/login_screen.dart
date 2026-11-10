@@ -1,41 +1,39 @@
+import '../../auth/validation/auth_validators.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../application/auth/auth_failure.dart';
 import '../../../application/auth/auth_service.dart';
-import '../../../application/auth/auth_service_exception.dart';
+import '../../../application/auth/auth_scope.dart';
+import '../../../data/network/api_exception.dart';
+import '../../auth/api_error_message.dart';
+
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/app_color.dart';
-import '../../../data/repositories/wexora_otp_repository.dart';
+
 import '../../../presentation/auth/auth_route_arguments.dart';
 import '../../../presentation/widgets/auth/sanad_auth_logo.dart';
 import '../../../presentation/screens/otp_verification_screen/otp_verification_screen.dart';
+import '../recovery_phone_screen/recovery_phone_screen.dart';
 import '../../../utils/routes.dart';
 import '../../widgets/login_screen_widgets/forgot_password_form.dart';
 import '../../widgets/login_screen_widgets/login_footer_links.dart';
 import '../../widgets/shared_widgets/auth_screen_styles.dart';
+import '../../widgets/recovery_widgets/recovery_progress_header.dart';
 import '../../widgets/login_screen_widgets/login_form.dart';
-import '../../widgets/login_screen_widgets/login_otp_form.dart';
 import '../../widgets/login_screen_widgets/reset_password_form.dart';
 
-enum _AuthView { login, otpVerify, forgotPassword, resetNewPassword }
+enum _AuthView { login, forgotPassword, resetNewPassword }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({
-    super.key,
-    required this.arguments,
-    this.authService,
-    this.otpRepository,
-  });
+  const LoginScreen({super.key, required this.arguments, this.authService});
 
   static const routeName = '/login';
 
   final AuthRouteArguments arguments;
   final AuthService? authService;
-  final OtpVerificationRepository? otpRepository;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -48,32 +46,22 @@ class _LoginScreenState extends State<LoginScreen>
   String? _error;
   bool _isArabic = false;
   bool _localeInitialized = false;
-  String? _otpEmailMasked;
-  String _otpPurpose = 'login';
 
   OverlayEntry? _toastEntry;
   Timer? _toastTimer;
-  Timer? _loginCooldownTimer;
-  DateTime? _loginLockedUntil;
-  int _loginFailedAttempts = 0;
-  int _loginLockRemaining = 0;
 
   final _loginUsername = TextEditingController();
   final _loginPassword = TextEditingController();
-  final _otpCode = TextEditingController();
   final _forgotEmail = TextEditingController();
   final _resetNewPass = TextEditingController();
   final _resetNewConfirm = TextEditingController();
-
-  final List<FocusNode> _otpFocus = List.generate(4, (_) => FocusNode());
-  final List<TextEditingController> _otpDigits = List.generate(
-    4,
-    (_) => TextEditingController(),
-  );
+  String? _lastRecoveryPhone;
 
   bool _obscureLogin = true, _obscureReset = true, _obscureResetConfirm = true;
-  int _loginUserShake = 0, _loginPassShake = 0, _forgotEmailShake = 0;
-  bool _loginUserErr = false, _loginPassErr = false, _forgotEmailErr = false;
+  final int _loginUserShake = 0, _loginPassShake = 0, _forgotEmailShake = 0;
+  final bool _loginUserErr = false,
+      _loginPassErr = false,
+      _forgotEmailErr = false;
   bool _resetHasUpper = false,
       _resetHasNumber = false,
       _resetHasSpecial = false,
@@ -83,9 +71,6 @@ class _LoginScreenState extends State<LoginScreen>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
-
-  int _resendLeft = 0;
-  Timer? _resendTimer;
 
   @override
   void initState() {
@@ -121,11 +106,12 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _validateResetPassword() {
     final pass = _resetNewPass.text;
+    final policy = PasswordValidation.evaluate(pass);
     setState(() {
-      _resetMinLen = pass.trim().length >= 8;
-      _resetHasUpper = pass.contains(RegExp(r'[A-Z]'));
-      _resetHasNumber = pass.contains(RegExp(r'[0-9]'));
-      _resetHasSpecial = pass.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+      _resetMinLen = policy.hasMinimumLength;
+      _resetHasUpper = policy.hasUppercase && policy.hasLowercase;
+      _resetHasNumber = policy.hasDigit;
+      _resetHasSpecial = policy.hasSpecialCharacter;
       _resetPassMatch = pass.isNotEmpty && pass == _resetNewConfirm.text;
     });
   }
@@ -133,45 +119,15 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _toastTimer?.cancel();
-    _loginCooldownTimer?.cancel();
+
     _toastEntry?.remove();
-    _resendTimer?.cancel();
     _loginUsername.dispose();
     _loginPassword.dispose();
-    _otpCode.dispose();
     _forgotEmail.dispose();
     _resetNewPass.dispose();
     _resetNewConfirm.dispose();
-    for (final c in _otpDigits) c.dispose();
-    for (final f in _otpFocus) f.dispose();
     _animController.dispose();
     super.dispose();
-  }
-
-  void _syncOtpCode() {
-    _otpCode.text = _otpDigits.map((e) => e.text.trim()).join();
-  }
-
-  void _clearOtpInputs() {
-    for (final c in _otpDigits) c.clear();
-    _otpCode.clear();
-  }
-
-  void _startResendTimer([int seconds = 30]) {
-    _resendTimer?.cancel();
-    setState(() => _resendLeft = seconds);
-    _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) {
-        t.cancel();
-        return;
-      }
-      if (_resendLeft <= 1) {
-        t.cancel();
-        setState(() => _resendLeft = 0);
-        return;
-      }
-      setState(() => _resendLeft--);
-    });
   }
 
   void _showToast(String message, {required bool success}) {
@@ -244,10 +200,6 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _signIn() async {
     if (_loading) return;
-    if (_loginLockRemaining > 0) {
-      _showToast(_loginCooldownMessage(_loginLockRemaining), success: false);
-      return;
-    }
     final email = _loginUsername.text.trim();
     final validEmail = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email);
     if (!validEmail || _loginPassword.text.isEmpty) {
@@ -267,142 +219,133 @@ class _LoginScreenState extends State<LoginScreen>
       _error = null;
     });
     try {
-      final authService = widget.authService ?? AuthService.firebase();
-      final user = await authService.signIn(
+      final auth = widget.authService ?? AuthScope.read(context);
+      final attempt = await auth.startLogin(
         email: email,
         password: _loginPassword.text,
+        language: _isArabic ? 'ar' : 'en',
       );
-      final phoneNumber = user.phoneNumber?.trim();
-      if (phoneNumber == null || phoneNumber.isEmpty) {
-        await authService.signOut();
-        if (mounted) {
-          _showToast(
-            _isArabic
-                ? 'لا يوجد رقم واتساب مرتبط بهذا الحساب. تواصل مع الدعم.'
-                : 'This account has no WhatsApp number. Contact support.',
-            success: false,
-          );
-        }
-        return;
-      }
-      // Do not leave a Firebase session active while the WhatsApp challenge
-      // is pending. Sign in again only after the OTP is verified.
-      await authService.signOut();
       if (!mounted) return;
-      _loginFailedAttempts = 0;
-      _loginCooldownTimer?.cancel();
-      _loginLockedUntil = null;
-      _loginLockRemaining = 0;
+      _loginPassword.clear();
       final otpArguments = AuthRouteArguments(
-        role: user.role,
+        role: widget.arguments.role,
         email: email,
-        password: _loginPassword.text,
-        phoneNumber: phoneNumber,
         isLoginVerification: true,
+        phoneNumber: attempt.maskedPhoneNumber,
       );
-      Navigator.of(context).push(
-        AppRoutes.transition(
+      final result = await Navigator.of(context).push<String>(
+        AppRoutes.transition<String>(
           settings: RouteSettings(
             name: AppRoutes.otpVerification,
             arguments: otpArguments,
           ),
-          builder: (_) => OtpVerificationScreen(
-            arguments: otpArguments,
-            repository: widget.otpRepository,
-            authService: authService,
-          ),
+          builder: (_) =>
+              OtpVerificationScreen(arguments: otpArguments, authService: auth),
         ),
       );
-    } on AuthFailure catch (error) {
-      if (!mounted) return;
-      if (error.type == AuthFailureType.invalidCredentials) {
-        _loginFailedAttempts++;
-        if (_loginFailedAttempts >= 5) {
-          _startLoginCooldown();
-          _showToast(
-            _loginCooldownMessage(_loginLockRemaining),
-            success: false,
-          );
-          return;
-        }
+      if (mounted && result is String) {
+        _showToast(
+          apiErrorMessage(context.l10n, ApiException(code: result)),
+          success: false,
+        );
       }
-      final message = switch (error.type) {
-        AuthFailureType.invalidCredentials ||
-        AuthFailureType.invalidEmail => context.l10n.authInvalidCredentials,
-        AuthFailureType.network => context.l10n.authNetworkError,
-        _ => context.l10n.authGenericError,
-      };
-      _showToast(message, success: false);
-    } on AuthServiceException {
-      if (mounted) _showToast(context.l10n.authGenericError, success: false);
-    } catch (_) {
-      if (mounted) _showToast(context.l10n.authGenericError, success: false);
+    } catch (error) {
+      if (mounted) {
+        _showToast(apiErrorMessage(context.l10n, error), success: false);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _startLoginCooldown() {
-    _loginCooldownTimer?.cancel();
-    _loginLockedUntil = DateTime.now().add(const Duration(seconds: 60));
-    setState(() => _loginLockRemaining = 60);
-    _loginCooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      final remaining = _loginLockedUntil!.difference(DateTime.now()).inSeconds;
-      if (remaining <= 0) {
-        timer.cancel();
-        setState(() {
-          _loginLockRemaining = 0;
-          _loginFailedAttempts = 0;
-          _loginLockedUntil = null;
-        });
-        return;
-      }
-      setState(() => _loginLockRemaining = remaining);
-    });
+  AuthService get _auth => widget.authService ?? AuthScope.read(context);
+
+  void _backFromRecovery() {
+    if (_loading) return;
+    _auth.discardRecovery();
+    if (_view == _AuthView.resetNewPassword) {
+      _resetNewPass.clear();
+      _resetNewConfirm.clear();
+      _go(_AuthView.forgotPassword);
+      _recover('start');
+    } else {
+      _go(_AuthView.login);
+    }
   }
 
-  String _loginCooldownMessage(int seconds) => _isArabic
-      ? 'محاولات كثيرة. حاول مرة أخرى بعد $seconds ثانية.'
-      : 'Too many attempts. Try again in $seconds seconds.';
-
-  void _demoAction(String action, {String? email}) {
+  Future<void> _recover(String action) async {
     if (_loading) return;
+    if (action == 'start' &&
+        AuthValidators.validateEmail(_forgotEmail.text) != null) {
+      _showToast(context.l10n.invalidEmailMessage, success: false);
+      return;
+    }
+    if (action == 'reset' &&
+        (AuthValidators.validatePassword(_resetNewPass.text) != null ||
+            _resetNewPass.text != _resetNewConfirm.text)) {
+      _showToast(
+        _isArabic
+            ? 'راجع شروط كلمة المرور وتأكيدها.'
+            : 'Check the password requirements and confirmation.',
+        success: false,
+      );
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
     });
-    Future<void>.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      if (action == 'login') {
-        _showToast(
-          _isArabic
-              ? 'واجهة تجريبية فقط، لم يتم إرسال البيانات'
-              : 'Preview only. No data was sent.',
-          success: true,
+    try {
+      if (action == 'start') {
+        final submittedEmail = _forgotEmail.text.trim().toLowerCase();
+        final eligible = await _auth.checkRecoveryEligibility(submittedEmail);
+        if (!mounted) return;
+        if (_forgotEmail.text.trim().toLowerCase() != submittedEmail) return;
+        if (!eligible) throw ApiException(code: 'recovery-not-eligible');
+        final result = await Navigator.of(context).push<String>(
+          AppRoutes.transition<String>(
+            settings: const RouteSettings(name: RecoveryPhoneScreen.routeName),
+            builder: (_) => RecoveryPhoneScreen(
+              email: submittedEmail,
+              role: widget.arguments.role,
+              initialPhoneNumber: _lastRecoveryPhone,
+              authService: _auth,
+            ),
+          ),
         );
-      } else if (action == 'forgot_request' || action == 'verify_otp') {
-        setState(() {
-          _otpPurpose = action == 'forgot_request' ? 'reset' : 'login';
-          _otpEmailMasked = email ?? _loginUsername.text;
-        });
-        _clearOtpInputs();
-        _startResendTimer();
-        _go(_AuthView.otpVerify);
-      } else if (action == 'forgot_verify') {
-        _go(_AuthView.resetNewPassword);
-      } else if (action == 'forgot_set_password') {
-        _showToast(
-          _isArabic ? 'تمت المعاينة' : 'Preview complete',
-          success: true,
-        );
-        _go(_AuthView.login);
+        if (!mounted) return;
+        if (result != null && _auth.hasVerifiedRecovery) {
+          _lastRecoveryPhone = result;
+          _go(_AuthView.resetNewPassword);
+        } else {
+          _auth.discardRecovery();
+          _go(_AuthView.forgotPassword);
+          if (result != null) {
+            _error = apiErrorMessage(context.l10n, ApiException(code: result));
+          }
+        }
+      } else {
+        await _auth.resetPassword(_resetNewPass.text, _resetNewConfirm.text);
+        if (mounted) {
+          _resetNewPass.clear();
+          _resetNewConfirm.clear();
+          _forgotEmail.clear();
+          _loginPassword.clear();
+          _lastRecoveryPhone = null;
+          _go(_AuthView.login);
+        }
       }
-    });
+    } catch (error) {
+      if (!mounted) return;
+      if (!_auth.hasPendingRecovery && action != 'start') {
+        _resetNewPass.clear();
+        _resetNewConfirm.clear();
+        _view = _AuthView.forgotPassword;
+      }
+      setState(() => _error = apiErrorMessage(context.l10n, error));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Widget _buildBrandHeader(BuildContext context) {
@@ -459,10 +402,10 @@ class _LoginScreenState extends State<LoginScreen>
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
           child: PopScope(
-            canPop: _view == _AuthView.login,
+            canPop: !_loading && _view == _AuthView.login,
             onPopInvokedWithResult: (didPop, result) {
-              if (didPop || _view == _AuthView.otpVerify) return;
-              _go(_AuthView.login);
+              if (didPop || _loading) return;
+              _backFromRecovery();
             },
             child: Scaffold(
               backgroundColor: context.sanadBg,
@@ -474,6 +417,13 @@ class _LoginScreenState extends State<LoginScreen>
                     position: _slideAnim,
                     child: Column(
                       children: [
+                        if (_view != _AuthView.login)
+                          RecoveryProgressHeader(
+                            step: _view == _AuthView.forgotPassword
+                                ? RecoveryStep.email
+                                : RecoveryStep.resetPassword,
+                            onBack: _backFromRecovery,
+                          ),
                         if (showHeader)
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -509,40 +459,18 @@ class _LoginScreenState extends State<LoginScreen>
                                 onToggleObscure: () => setState(
                                   () => _obscureLogin = !_obscureLogin,
                                 ),
-                                onToggle: () => Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.roleSelection,
-                                ),
-                                onForgot: () => _go(_AuthView.forgotPassword),
+                                onToggle: () {
+                                  if (!_loading) {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.roleSelection,
+                                    );
+                                  }
+                                },
+                                onForgot: () {
+                                  if (!_loading) _go(_AuthView.forgotPassword);
+                                },
                                 onSubmit: _signIn,
-                              ),
-                              _AuthView.otpVerify => LoginOtpForm(
-                                isArabic: _isArabic,
-                                loading: _loading,
-                                digits: _otpDigits,
-                                focusNodes: _otpFocus,
-                                subtitle: _otpEmailMasked,
-                                resendLeft: _resendLeft,
-                                onDigitChanged: _syncOtpCode,
-                                onSubmit: () {
-                                  _syncOtpCode();
-                                  if (_otpCode.text.length != 4) return;
-                                  _demoAction(
-                                    _otpPurpose == 'reset'
-                                        ? 'forgot_verify'
-                                        : 'verify_otp',
-                                  );
-                                },
-                                onResend: () {
-                                  _clearOtpInputs();
-                                  _startResendTimer();
-                                  _showToast(
-                                    _isArabic
-                                        ? 'معاينة فقط، لم يتم إرسال كود'
-                                        : 'Preview only. No code was sent.',
-                                    success: true,
-                                  );
-                                },
                               ),
                               _AuthView.forgotPassword => Align(
                                 alignment: Alignment.topCenter,
@@ -556,11 +484,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     email: _forgotEmail,
                                     emailError: _forgotEmailErr,
                                     emailShake: _forgotEmailShake,
-                                    onBack: () => _go(_AuthView.login),
-                                    onSubmit: () => _demoAction(
-                                      'forgot_request',
-                                      email: _forgotEmail.text.trim(),
-                                    ),
+                                    onSubmit: () => _recover('start'),
                                   ),
                                 ),
                               ),
@@ -588,9 +512,8 @@ class _LoginScreenState extends State<LoginScreen>
                                       () => _obscureResetConfirm =
                                           !_obscureResetConfirm,
                                     ),
-                                    onBack: () => _go(_AuthView.login),
-                                    onSubmit: () =>
-                                        _demoAction('forgot_set_password'),
+                                    onBack: _backFromRecovery,
+                                    onSubmit: () => _recover('reset'),
                                   ),
                                 ),
                             },

@@ -8,7 +8,7 @@ void main() {
       expect(UserRole.caregiver.value, 'caregiver');
     });
 
-    test('parses valid Firestore values', () {
+    test('parses valid backend role values', () {
       expect(userRoleFromString('patient'), UserRole.patient);
       expect(userRoleFromString('caregiver'), UserRole.caregiver);
     });
